@@ -1,4 +1,3 @@
-// backend/routes/produce.js
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
@@ -30,7 +29,11 @@ router.post('/listings', async (req, res) => {
         description,
       ]
     );
-    res.status(201).json(newListing.rows[0]);
+    const createdListing = newListing.rows[0];
+    res.status(201).json(createdListing);
+
+    // Emit the Socket.IO event using the io object from the request
+    req.io.emit('newListing', createdListing);
   } catch (error) {
     console.error('Error creating listing:', error);
     res.status(500).json({ error: 'Failed to create listing' });

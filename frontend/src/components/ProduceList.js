@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { io } from 'socket.io-client'; // Import socket.io-client
 
 const ProduceList = () => {
   const [listings, setListings] = useState([]);
@@ -6,6 +7,8 @@ const ProduceList = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    const socket = io('http://localhost:3000', { transports: ['websocket'] }); // Connect to Socket.IO server
+
     const fetchListings = async () => {
       setLoading(true);
       setError(null);
@@ -28,7 +31,17 @@ const ProduceList = () => {
     };
 
     fetchListings();
-  }, []); // The empty dependency array ensures this effect runs only once on mount
+
+    // Listen for the 'newListing' event from the server
+    socket.on('newListing', (newListing) => {
+      setListings((prevListings) => [newListing, ...prevListings]); // Add the new listing to the beginning of the list
+    });
+
+    // Clean up the socket connection when the component unmounts
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   if (loading) {
     return <div>Loading listings...</div>;
