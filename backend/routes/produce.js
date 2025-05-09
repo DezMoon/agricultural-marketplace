@@ -40,27 +40,43 @@ router.post('/listings', async (req, res) => {
   }
 });
 
-// GET endpoint to retrieve all produce listings (with filtering and searching)
+// GET endpoint to retrieve all produce listings (with filtering, searching, and pagination)
 router.get('/listings', async (req, res) => {
   try {
-    const { produce_type, location, search } = req.query;
+    const { produce_type, location, search, page, pageSize } = req.query;
     let query = 'SELECT * FROM produce_listings WHERE TRUE';
     const values = [];
     let valueIndex = 1;
 
     if (produce_type) {
       query += ` AND produce_type ILIKE $${valueIndex++}`;
-      values.push(`%${produce_type}%`); // Use ILIKE with wildcards for substring search
+      values.push(`%${produce_type}%`);
     }
 
     if (location) {
       query += ` AND location ILIKE $${valueIndex++}`;
-      values.push(`%${location}%`); // Use ILIKE with wildcards for substring search
+      values.push(`%${location}%`);
     }
 
     if (search) {
       query += ` AND (produce_type ILIKE $${valueIndex} OR location ILIKE $${valueIndex} OR description ILIKE $${valueIndex})`;
       values.push(`%${search}%`);
+    }
+
+    let offset = 0;
+    if (page && pageSize) {
+      const parsedPage = parseInt(page, 10);
+      const parsedPageSize = parseInt(pageSize, 10);
+      if (
+        !isNaN(parsedPage) &&
+        !isNaN(parsedPageSize) &&
+        parsedPage > 0 &&
+        parsedPageSize > 0
+      ) {
+        offset = (parsedPage - 1) * parsedPageSize;
+        query += ` LIMIT $${valueIndex++} OFFSET $${valueIndex++}`;
+        values.push(parsedPageSize, offset);
+      }
     }
 
     const allListings = await pool.query(query, values);

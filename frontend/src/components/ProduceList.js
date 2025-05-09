@@ -8,6 +8,8 @@ const ProduceList = () => {
   const [produceTypeFilter, setProduceTypeFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10); // You can adjust the default page size
 
   useEffect(() => {
     const socket = io('http://localhost:3000', { transports: ['websocket'] });
@@ -18,7 +20,7 @@ const ProduceList = () => {
 
       try {
         const response = await fetch(
-          `http://localhost:3000/api/produce/listings?produce_type=${produceTypeFilter}&location=${locationFilter}&search=${searchQuery}`
+          `http://localhost:3000/api/produce/listings?produce_type=${produceTypeFilter}&location=${locationFilter}&search=${searchQuery}&page=${page}&pageSize=${pageSize}`
         );
         if (response.ok) {
           const data = await response.json();
@@ -42,18 +44,34 @@ const ProduceList = () => {
     return () => {
       socket.disconnect();
     };
-  }, [produceTypeFilter, locationFilter, searchQuery]); // Re-fetch when filters or search changes
+  }, [produceTypeFilter, locationFilter, searchQuery, page, pageSize]); // Re-fetch when any dependency changes
 
   const handleProduceTypeChange = (e) => {
     setProduceTypeFilter(e.target.value);
+    setPage(1); // Reset to first page when filter changes
   };
 
   const handleLocationChange = (e) => {
     setLocationFilter(e.target.value);
+    setPage(1); // Reset to first page when filter changes
   };
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
+    setPage(1); // Reset to first page when search changes
+  };
+
+  const handlePreviousPage = () => {
+    if (page > 1) {
+      setPage(page - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (listings.length === pageSize) {
+      // Simple check if there might be more pages
+      setPage(page + 1);
+    }
   };
 
   if (loading) {
@@ -115,6 +133,16 @@ const ProduceList = () => {
           ))}
         </ul>
       )}
+
+      <div>
+        <button onClick={handlePreviousPage} disabled={page === 1}>
+          Previous
+        </button>
+        <span> Page {page} </span>
+        <button onClick={handleNextPage} disabled={listings.length < pageSize}>
+          Next
+        </button>
+      </div>
     </div>
   );
 };
