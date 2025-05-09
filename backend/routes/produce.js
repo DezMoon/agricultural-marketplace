@@ -40,10 +40,30 @@ router.post('/listings', async (req, res) => {
   }
 });
 
-// GET endpoint to retrieve all produce listings
+// GET endpoint to retrieve all produce listings (with filtering and searching)
 router.get('/listings', async (req, res) => {
   try {
-    const allListings = await pool.query('SELECT * FROM produce_listings');
+    const { produce_type, location, search } = req.query;
+    let query = 'SELECT * FROM produce_listings WHERE TRUE';
+    const values = [];
+    let valueIndex = 1;
+
+    if (produce_type) {
+      query += ` AND produce_type ILIKE $${valueIndex++}`;
+      values.push(`%${produce_type}%`); // Use ILIKE with wildcards for substring search
+    }
+
+    if (location) {
+      query += ` AND location ILIKE $${valueIndex++}`;
+      values.push(`%${location}%`); // Use ILIKE with wildcards for substring search
+    }
+
+    if (search) {
+      query += ` AND (produce_type ILIKE $${valueIndex} OR location ILIKE $${valueIndex} OR description ILIKE $${valueIndex})`;
+      values.push(`%${search}%`);
+    }
+
+    const allListings = await pool.query(query, values);
     res.json(allListings.rows);
   } catch (error) {
     console.error('Error fetching listings:', error);
