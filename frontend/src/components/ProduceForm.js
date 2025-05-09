@@ -21,6 +21,8 @@ const ProduceForm = () => {
     e.preventDefault();
     setSubmissionStatus('submitting'); // Indicate that the form is being submitted
 
+    const token = localStorage.getItem('token');
+
     try {
       const response = await fetch(
         'http://localhost:3000/api/produce/listings',
@@ -28,13 +30,23 @@ const ProduceForm = () => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({
+            farmer_name: formData.farmer_name,
+            produce_type: formData.produce_type,
+            quantity: formData.quantity,
+            unit: formData.unit,
+            price_per_unit: formData.price_per_unit,
+            location: formData.location,
+            description: formData.description,
+          }),
         }
       );
 
+      const data = await response.json();
+
       if (response.ok) {
-        const data = await response.json();
         console.log('Listing created:', data);
         setSubmissionStatus('success');
         setFormData({

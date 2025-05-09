@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
+const authMiddleware = require('../middleware/authMiddleware'); // Import the middleware
 
 // Middleware to parse JSON request bodies
 router.use(express.json());
 
-// POST endpoint to create a new produce listing
-router.post('/listings', async (req, res) => {
+// POST endpoint to create a new produce listing (PROTECTED)
+router.post('/listings', authMiddleware, async (req, res) => {
   try {
     const {
       farmer_name,
@@ -17,8 +18,10 @@ router.post('/listings', async (req, res) => {
       location,
       description,
     } = req.body;
+    const user_id = req.user.userId; // Get the user ID from the authenticated user
+
     const newListing = await pool.query(
-      'INSERT INTO produce_listings (farmer_name, produce_type, quantity, unit, price_per_unit, location, description) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
+      'INSERT INTO produce_listings (farmer_name, produce_type, quantity, unit, price_per_unit, location, description, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
       [
         farmer_name,
         produce_type,
@@ -27,6 +30,7 @@ router.post('/listings', async (req, res) => {
         price_per_unit,
         location,
         description,
+        user_id,
       ]
     );
     const createdListing = newListing.rows[0];
@@ -40,10 +44,18 @@ router.post('/listings', async (req, res) => {
   }
 });
 
-// GET endpoint to retrieve all produce listings (with filtering, searching, and pagination)
+// GET endpoint to retrieve all produce listings (with filtering, searching, pagination, and sorting)
 router.get('/listings', async (req, res) => {
   try {
-    const { produce_type, location, search, page, pageSize } = req.query;
+    const {
+      produce_type,
+      location,
+      search,
+      page,
+      pageSize,
+      sortBy,
+      sortOrder,
+    } = req.query;
     let query = 'SELECT * FROM produce_listings WHERE TRUE';
     const values = [];
     let valueIndex = 1;
@@ -63,7 +75,26 @@ router.get('/listings', async (req, res) => {
       values.push(`%${search}%`);
     }
 
-    let offset = 0;
+    if (sortBy) {
+      const allowedSortColumns = [
+        'farmer_name',
+        'produce_type',
+        'quantity',
+        'price_per_unit',
+        'location',
+        'listing_date',
+      ];
+      if (allowedSortColumns.includes(sortBy)) {
+        const sortDirection =
+          sortOrder && sortOrder.toLowerCase() === 'desc' ? 'DESC' : 'ASC';
+        query += ` ORDER BY "${sortBy}" ${sortDirection}`;
+      }
+    } else {
+      query += ` ORDER BY listing_date DESC`;
+    }
+
+    let limitClause = '';
+    let offsetClause = '';
     if (page && pageSize) {
       const parsedPage = parseInt(page, 10);
       const parsedPageSize = parseInt(pageSize, 10);
@@ -73,11 +104,15 @@ router.get('/listings', async (req, res) => {
         parsedPage > 0 &&
         parsedPageSize > 0
       ) {
-        offset = (parsedPage - 1) * parsedPageSize;
-        query += ` LIMIT $${valueIndex++} OFFSET $${valueIndex++}`;
-        values.push(parsedPageSize, offset);
+        limitClause = ` LIMIT $${valueIndex++}`;
+        offsetClause = ` OFFSET $${valueIndex++}`;
+        values.push(parsedPageSize, (parsedPage - 1) * parsedPageSize);
       }
     }
+
+    query += limitClause + offsetClause;
+
+    console.log('Executing Query:', query, 'Values:', values);
 
     const allListings = await pool.query(query, values);
     res.json(allListings.rows);

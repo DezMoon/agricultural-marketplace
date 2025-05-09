@@ -9,7 +9,9 @@ const ProduceList = () => {
   const [locationFilter, setLocationFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10); // You can adjust the default page size
+  const [pageSize, setPageSize] = useState(10);
+  const [sortBy, setSortBy] = useState('listing_date'); // Default sorting option
+  const [sortOrder, setSortOrder] = useState('desc'); // Default sort order
 
   useEffect(() => {
     const socket = io('http://localhost:3000', { transports: ['websocket'] });
@@ -20,7 +22,7 @@ const ProduceList = () => {
 
       try {
         const response = await fetch(
-          `http://localhost:3000/api/produce/listings?produce_type=${produceTypeFilter}&location=${locationFilter}&search=${searchQuery}&page=${page}&pageSize=${pageSize}`
+          `http://localhost:3000/api/produce/listings?produce_type=${produceTypeFilter}&location=${locationFilter}&search=${searchQuery}&page=${page}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`
         );
         if (response.ok) {
           const data = await response.json();
@@ -44,21 +46,29 @@ const ProduceList = () => {
     return () => {
       socket.disconnect();
     };
-  }, [produceTypeFilter, locationFilter, searchQuery, page, pageSize]); // Re-fetch when any dependency changes
+  }, [
+    produceTypeFilter,
+    locationFilter,
+    searchQuery,
+    page,
+    pageSize,
+    sortBy,
+    sortOrder,
+  ]);
 
   const handleProduceTypeChange = (e) => {
     setProduceTypeFilter(e.target.value);
-    setPage(1); // Reset to first page when filter changes
+    setPage(1);
   };
 
   const handleLocationChange = (e) => {
     setLocationFilter(e.target.value);
-    setPage(1); // Reset to first page when filter changes
+    setPage(1);
   };
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
-    setPage(1); // Reset to first page when search changes
+    setPage(1);
   };
 
   const handlePreviousPage = () => {
@@ -69,9 +79,18 @@ const ProduceList = () => {
 
   const handleNextPage = () => {
     if (listings.length === pageSize) {
-      // Simple check if there might be more pages
       setPage(page + 1);
     }
+  };
+
+  const handleSortByChange = (e) => {
+    setSortBy(e.target.value);
+    setPage(1); // Reset page on sort
+  };
+
+  const handleSortOrderChange = (e) => {
+    setSortOrder(e.target.value);
+    setPage(1); // Reset page on sort order change
   };
 
   if (loading) {
@@ -117,6 +136,28 @@ const ProduceList = () => {
           onChange={handleSearchChange}
           placeholder="Search by type, location, or description"
         />
+      </div>
+
+      <div>
+        <label htmlFor="sortBy">Sort By:</label>
+        <select id="sortBy" value={sortBy} onChange={handleSortByChange}>
+          <option value="listing_date">Date</option>
+          <option value="farmer_name">Farmer Name</option>
+          <option value="produce_type">Produce Type</option>
+          <option value="quantity">Quantity</option>
+          <option value="price_per_unit">Price</option>
+          <option value="location">Location</option>
+        </select>
+
+        <label htmlFor="sortOrder">Order:</label>
+        <select
+          id="sortOrder"
+          value={sortOrder}
+          onChange={handleSortOrderChange}
+        >
+          <option value="asc">Ascending</option>
+          <option value="desc">Descending</option>
+        </select>
       </div>
 
       {listings.length === 0 ? (
