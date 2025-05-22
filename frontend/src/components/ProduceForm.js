@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import './ProduceForm.css';
 
 const ProduceForm = () => {
   const [formData, setFormData] = useState({
@@ -71,7 +72,7 @@ const ProduceForm = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="product-form">
       <div>
         <label htmlFor="farmer_name">Farmer Name:</label>
         <input

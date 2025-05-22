@@ -1,0 +1,50 @@
+/* frontend/src/components/ProduceForm.css */
+
+.produce-form {
+  background-color: #fff; /* White background */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: 20px auto; /* Center the form */
+  text-align: left;
+}
+
+.produce-form div {
+  margin-bottom: 15px;
+}
+
+.produce-form label {
+  display: block; /* Label on its own line */
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.produce-form input[type='text'],
+.produce-form input[type='number'],
+.produce-form textarea {
+  width: 100%; /* Full width inputs */
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box; /* Include padding and border in element's total width and height */
+}
+
+.produce-form textarea {
+  resize: vertical; /* Allow vertical resizing */
+  min-height: 100px;
+}
+
+.produce-form button {
+  background-color: #28a745; /* Green button */
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.produce-form button:hover {
+  background-color: #218838; /* Darker green on hover */
+}
