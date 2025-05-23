@@ -1,0 +1,69 @@
+.form-container {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  max-width: 400px; /* Limit the width of the form */
+  margin: 40px auto; /* Center the form horizontally and add vertical margin */
+  text-align: left; /* Align text within the form to the left */
+}
+
+.form-container h2 {
+  color: #0056b3;
+  text-align: center;
+  margin-bottom: 25px;
+  font-size: 1.8em;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #333;
+}
+
+.form-group input[type='text'],
+.form-group input[type='email'],
+.form-group input[type='password'] {
+  width: calc(100% - 20px); /* Account for padding */
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1em;
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+}
+
+.form-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #007bff; /* Primary button color */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1.1em;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 20px;
+}
+
+.form-button:hover {
+  background-color: #0056b3; /* Darker shade on hover */
+}
+
+.message-success {
+  color: green;
+  text-align: center;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+.message-error {
+  color: red;
+  text-align: center;
+  margin-top: 15px;
+  font-weight: bold;
+}

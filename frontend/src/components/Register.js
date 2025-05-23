@@ -1,4 +1,7 @@
+// frontend/src/components/Register.js
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import '../styles/Forms.css';
 
 const Register = () => {
   const [username, setUsername] = useState('');
@@ -6,6 +9,7 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate(); // Initialize navigate
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -24,28 +28,28 @@ const Register = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setMessage(data.message);
-        // Optionally redirect to login page or clear the form
+        setMessage(data.message + ' You can now log in.');
         setUsername('');
         setEmail('');
         setPassword('');
+        //Redirect to login page after successful registration
+        navigate('/login');
       } else {
         setError(data.error || 'Registration failed');
       }
     } catch (err) {
       setError('Error connecting to the server');
-      // Log the error to an external monitoring service or handle it appropriately
       console.error('Registration error:', err);
     }
   };
 
   return (
-    <div>
+    <div className="form-container">
       <h2>Register</h2>
-      {message && <p style={{ color: 'green' }}>{message}</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {message && <p className="message-success">{message}</p>}
+      {error && <p className="message-error">{error}</p>}
       <form onSubmit={handleRegister}>
-        <div>
+        <div className="form-group">
           <label htmlFor="username">Username:</label>
           <input
             type="text"
@@ -55,7 +59,7 @@ const Register = () => {
             required
           />
         </div>
-        <div>
+        <div className="form-group">
           <label htmlFor="email">Email:</label>
           <input
             type="email"
@@ -65,7 +69,7 @@ const Register = () => {
             required
           />
         </div>
-        <div>
+        <div className="form-group">
           <label htmlFor="password">Password:</label>
           <input
             type="password"
@@ -75,7 +79,9 @@ const Register = () => {
             required
           />
         </div>
-        <button type="submit">Register</button>
+        <button type="submit" className="form-button">
+          Register
+        </button>
       </form>
     </div>
   );

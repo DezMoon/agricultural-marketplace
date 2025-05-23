@@ -1,10 +1,16 @@
+// frontend/src/components/Login.js
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useAuth } from '../context/AuthContext'; // Import useAuth
+import '../styles/Forms.css';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const navigate = useNavigate(); // Initialize navigate
+  const { login } = useAuth(); // Get the login function from context
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -24,25 +30,24 @@ const Login = () => {
 
       if (response.ok) {
         setMessage(data.message);
-        localStorage.setItem('token', data.token); // Store the token
-        // Optionally redirect to the main page or update user state
+        login(data.token, username); // Call the login function from AuthContext
+        navigate('/'); // Redirect to produce listings on successful login
       } else {
         setError(data.error || 'Login failed');
       }
     } catch (err) {
       setError('Error connecting to the server');
-      // Log the error to an external monitoring service or handle it appropriately
-      // Example: logError('Login error:', err);
+      console.error('Login error:', err);
     }
   };
 
   return (
-    <div>
+    <div className="form-container">
       <h2>Login</h2>
-      {message && <p style={{ color: 'green' }}>{message}</p>}
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {message && <p className="message-success">{message}</p>}
+      {error && <p className="message-error">{error}</p>}
       <form onSubmit={handleLogin}>
-        <div>
+        <div className="form-group">
           <label htmlFor="username">Username:</label>
           <input
             type="text"
@@ -52,7 +57,7 @@ const Login = () => {
             required
           />
         </div>
-        <div>
+        <div className="form-group">
           <label htmlFor="password">Password:</label>
           <input
             type="password"
@@ -62,7 +67,9 @@ const Login = () => {
             required
           />
         </div>
-        <button type="submit">Login</button>
+        <button type="submit" className="form-button">
+          Login
+        </button>
       </form>
     </div>
   );

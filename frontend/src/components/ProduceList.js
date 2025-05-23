@@ -11,8 +11,9 @@ const ProduceList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize] = useState(5);
-  const [sortBy, setSortBy] = useState('listing_date'); // Default sorting option
-  const [sortOrder, setSortOrder] = useState('desc'); // Default sort order
+  const [sortBy, setSortBy] = useState('listing_date');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [totalListings, setTotalListings] = useState(0); // State to store total count from backend
 
   useEffect(() => {
     const socket = io('http://localhost:3000', { transports: ['websocket'] });
@@ -26,8 +27,9 @@ const ProduceList = () => {
           `http://localhost:3000/api/produce/listings?produce_type=${produceTypeFilter}&location=${locationFilter}&search=${searchQuery}&page=${page}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`
         );
         if (response.ok) {
-          const data = await response.json();
-          setListings(data);
+          const data = await response.json(); // Expecting an object now
+          setListings(data.listings); // Access the listings array
+          setTotalListings(data.total_count); // Store the total count
         } else {
           setError('Failed to fetch listings.');
         }
@@ -41,7 +43,11 @@ const ProduceList = () => {
     fetchListings();
 
     socket.on('newListing', (newListing) => {
-      setListings((prevListings) => [newListing, ...prevListings]);
+      // Re-fetch to update listings and total count when a new listing is added
+      // A more optimized approach might be to insert the newListing into the current
+      // listings state if it fits the current filters/page, and increment totalListings.
+      // But for simplicity and correctness with pagination, refetching is fine for now.
+      fetchListings();
     });
 
     return () => {
@@ -79,20 +85,24 @@ const ProduceList = () => {
   };
 
   const handleNextPage = () => {
-    if (listings.length === pageSize) {
+    const totalPages = Math.ceil(totalListings / pageSize);
+    if (page < totalPages) {
+      // Only allow next if current page is less than total pages
       setPage(page + 1);
     }
   };
 
-  const handleSortByChange = (e) => {
-    setSortBy(e.target.value);
-    setPage(1); // Reset page on sort
-  };
-
   const handleSortOrderChange = (e) => {
     setSortOrder(e.target.value);
-    setPage(1); // Reset page on sort order change
+    setPage(1);
   };
+
+  const handleSortByChange = (e) => {
+    setSortBy(e.target.value);
+    setPage(1);
+  };
+
+  const totalPages = Math.ceil(totalListings / pageSize); // Calculate total pages
 
   if (loading) {
     return <div>Loading listings...</div>;
@@ -163,7 +173,8 @@ const ProduceList = () => {
         </div>
       </div>
 
-      {listings.length === 0 ? (
+      {/* Display 'No listings available' only if not loading and listings array is empty */}
+      {listings.length === 0 && !loading ? (
         <div>No listings available.</div>
       ) : (
         <ul className="produce-list">
@@ -190,8 +201,12 @@ const ProduceList = () => {
         <button onClick={handlePreviousPage} disabled={page === 1}>
           Previous
         </button>
-        <span> Page {page} </span>
-        <button onClick={handleNextPage} disabled={listings.length < pageSize}>
+        <span>
+          {' '}
+          Page {page} of {totalPages}{' '}
+        </span>{' '}
+        {/* Display current and total pages */}
+        <button onClick={handleNextPage} disabled={page >= totalPages}>
           Next
         </button>
       </div>

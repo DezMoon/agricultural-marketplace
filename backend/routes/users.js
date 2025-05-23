@@ -1,3 +1,4 @@
+// backend/routes/users.js
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
@@ -28,6 +29,7 @@ router.post('/register', async (req, res) => {
     const password_hash = await bcrypt.hash(password, salt);
 
     // Create the new user
+    // Make sure 'username' and 'email' columns exist in your 'users' table
     const newUser = await pool.query(
       'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email',
       [username, email, password_hash]
@@ -47,18 +49,22 @@ router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    // Find the user
-    const user = await pool.query('SELECT * FROM users WHERE username = $1', [
-      username,
-    ]);
-    if (user.rows.length === 0) {
+    // Find the user by username or email
+    const userResult = await pool.query(
+      'SELECT * FROM users WHERE username = $1 OR email = $1', // Try matching both
+      [username]
+    );
+
+    if (userResult.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+
+    const user = userResult.rows[0]; // Get the found user
 
     // Check the password
     const validPassword = await bcrypt.compare(
       password,
-      user.rows[0].password_hash
+      user.password_hash // Use user.password_hash
     );
     if (!validPassword) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -66,7 +72,11 @@ router.post('/login', async (req, res) => {
 
     // Create and assign a token
     const token = jwt.sign(
-      { userId: user.rows[0].id },
+      {
+        userId: user.id,
+        username: user.username, // Include username
+        email: user.email, // Include email
+      },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
