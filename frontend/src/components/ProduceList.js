@@ -1,8 +1,17 @@
+// frontend/src/components/ProduceList.js
 import React, { useState, useEffect } from 'react';
-import { io } from 'socket.io-client';
+import { useLocation, useNavigate } from 'react-router-dom';
+import io from 'socket.io-client';
+import { useAuth } from '../context/AuthContext'; // Import useAuth
 import './ProduceList.css';
 
+const socket = io('http://localhost:3000'); // Connect to your backend Socket.IO server
+
 const ProduceList = () => {
+  const { isAuthenticated, user } = useAuth(); // Get authentication state and user info
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -10,49 +19,52 @@ const ProduceList = () => {
   const [locationFilter, setLocationFilter] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(5);
+  const [pageSize] = useState(10); // Number of items per page
+  const [totalCount, setTotalCount] = useState(0);
   const [sortBy, setSortBy] = useState('listing_date');
-  const [sortOrder, setSortOrder] = useState('desc');
-  const [totalListings, setTotalListings] = useState(0); // State to store total count from backend
+  const [sortOrder, setSortOrder] = useState('desc'); // 'asc' or 'desc'
+
+  const fetchListings = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({
+        page: page,
+        pageSize: pageSize,
+        sortBy: sortBy,
+        sortOrder: sortOrder,
+      });
+
+      if (produceTypeFilter) {
+        params.append('produce_type', produceTypeFilter);
+      }
+      if (locationFilter) {
+        params.append('location', locationFilter);
+      }
+      if (searchQuery) {
+        params.append('search', searchQuery);
+      }
+
+      const response = await fetch(
+        `http://localhost:3000/api/produce/listings?${params.toString()}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setListings(data.listings);
+        setTotalCount(data.total_count);
+      } else {
+        setError('Failed to fetch produce listings.');
+      }
+    } catch (err) {
+      console.error('Error fetching listings:', err);
+      setError('An error occurred while connecting to the server.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const socket = io('http://localhost:3000', { transports: ['websocket'] });
-
-    const fetchListings = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const response = await fetch(
-          `http://localhost:3000/api/produce/listings?produce_type=${produceTypeFilter}&location=${locationFilter}&search=${searchQuery}&page=${page}&pageSize=${pageSize}&sortBy=${sortBy}&sortOrder=${sortOrder}`
-        );
-        if (response.ok) {
-          const data = await response.json(); // Expecting an object now
-          setListings(data.listings); // Access the listings array
-          setTotalListings(data.total_count); // Store the total count
-        } else {
-          setError('Failed to fetch listings.');
-        }
-      } catch (error) {
-        setError('Error connecting to the server.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchListings();
-
-    socket.on('newListing', (newListing) => {
-      // Re-fetch to update listings and total count when a new listing is added
-      // A more optimized approach might be to insert the newListing into the current
-      // listings state if it fits the current filters/page, and increment totalListings.
-      // But for simplicity and correctness with pagination, refetching is fine for now.
-      fetchListings();
-    });
-
-    return () => {
-      socket.disconnect();
-    };
   }, [
     produceTypeFilter,
     locationFilter,
@@ -63,153 +75,189 @@ const ProduceList = () => {
     sortOrder,
   ]);
 
-  const handleProduceTypeChange = (e) => {
-    setProduceTypeFilter(e.target.value);
-    setPage(1);
+  useEffect(() => {
+    // Socket.IO for real-time updates
+    socket.on('newListing', (newListing) => {
+      console.log('New listing received via socket:', newListing);
+      // Add the new listing to the top of the list if it matches current filters
+      // For simplicity, just adding it. A more robust solution might refetch or smartly insert.
+      setListings((prevListings) => [newListing, ...prevListings]);
+      setTotalCount((prevCount) => prevCount + 1);
+    });
+
+    // If user is authenticated, join their private room
+    if (isAuthenticated && user && user.userId) {
+      socket.emit('joinRoom', user.userId);
+      console.log(`Attempting to join user room: user-${user.userId}`);
+    }
+
+    return () => {
+      socket.off('newListing');
+      // No explicit leaveRoom needed for user room unless switching users
+      // on the same socket without full page refresh
+    };
+  }, [isAuthenticated, user]);
+
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  const handleNextPage = () => {
+    if (page < totalPages) {
+      setPage(page + 1);
+    }
   };
 
-  const handleLocationChange = (e) => {
-    setLocationFilter(e.target.value);
-    setPage(1);
-  };
-
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-    setPage(1);
-  };
-
-  const handlePreviousPage = () => {
+  const handlePrevPage = () => {
     if (page > 1) {
       setPage(page - 1);
     }
   };
 
-  const handleNextPage = () => {
-    const totalPages = Math.ceil(totalListings / pageSize);
-    if (page < totalPages) {
-      // Only allow next if current page is less than total pages
-      setPage(page + 1);
+  const handleContactFarmer = (
+    listingId,
+    farmerId,
+    farmerUsername,
+    produceType
+  ) => {
+    // Navigate to a dedicated messaging page, passing relevant IDs
+    if (!isAuthenticated) {
+      alert('You must be logged in to contact the farmer.');
+      navigate('/login'); // Redirect to login if not authenticated
+      return;
     }
+    if (user.userId === farmerId) {
+      alert('You cannot message yourself for your own listing.');
+      return;
+    }
+    navigate(`/messages/${listingId}/${farmerId}`, {
+      state: { farmerUsername, produceType },
+    });
   };
-
-  const handleSortOrderChange = (e) => {
-    setSortOrder(e.target.value);
-    setPage(1);
-  };
-
-  const handleSortByChange = (e) => {
-    setSortBy(e.target.value);
-    setPage(1);
-  };
-
-  const totalPages = Math.ceil(totalListings / pageSize); // Calculate total pages
 
   if (loading) {
-    return <div>Loading listings...</div>;
+    return <div className="produce-list-container">Loading listings...</div>;
   }
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return (
+      <div className="produce-list-container error-message">Error: {error}</div>
+    );
   }
 
   return (
     <div className="produce-list-container">
-      <div className="filter-sort-controls">
-        <div>
-          <label htmlFor="produceTypeFilter">Filter by Produce Type:</label>
-          <input
-            type="text"
-            id="produceTypeFilter"
-            value={produceTypeFilter}
-            onChange={handleProduceTypeChange}
-            placeholder="e.g., Maize"
-          />
-        </div>
+      <h2>Available Produce Listings</h2>
 
-        <div>
-          <label htmlFor="locationFilter">Filter by Location:</label>
-          <input
-            type="text"
-            id="locationFilter"
-            value={locationFilter}
-            onChange={handleLocationChange}
-            placeholder="e.g., Lusaka"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="searchQuery">Search Listings:</label>
-          <input
-            type="text"
-            id="searchQuery"
-            value={searchQuery}
-            onChange={handleSearchChange}
-            placeholder="Search by type, location, or description"
-          />
-        </div>
-
-        <div>
-          <label htmlFor="sortBy">Sort By:</label>
-          <select id="sortBy" value={sortBy} onChange={handleSortByChange}>
+      <div className="filters-and-search">
+        <input
+          type="text"
+          placeholder="Filter by Produce Type (e.g., Maize)"
+          value={produceTypeFilter}
+          onChange={(e) => {
+            setProduceTypeFilter(e.target.value);
+            setPage(1); // Reset to first page on filter change
+          }}
+        />
+        <input
+          type="text"
+          placeholder="Filter by Location (e.g., Lusaka)"
+          value={locationFilter}
+          onChange={(e) => {
+            setLocationFilter(e.target.value);
+            setPage(1); // Reset to first page on filter change
+          }}
+        />
+        <input
+          type="text"
+          placeholder="Search by type, location, or description"
+          value={searchQuery}
+          onChange={(e) => {
+            setSearchQuery(e.target.value);
+            setPage(1); // Reset to first page on search change
+          }}
+        />
+        <div className="sort-options">
+          <span>Sort By:</span>
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
             <option value="listing_date">Date</option>
-            <option value="farmer_name">Farmer Name</option>
             <option value="produce_type">Produce Type</option>
             <option value="quantity">Quantity</option>
             <option value="price_per_unit">Price</option>
             <option value="location">Location</option>
+            <option value="farmer_name">Farmer</option>
           </select>
-        </div>
-
-        <div>
-          <label htmlFor="sortOrder">Order:</label>
           <select
-            id="sortOrder"
             value={sortOrder}
-            onChange={handleSortOrderChange}
+            onChange={(e) => setSortOrder(e.target.value)}
           >
-            <option value="asc">Ascending</option>
             <option value="desc">Descending</option>
+            <option value="asc">Ascending</option>
           </select>
         </div>
       </div>
 
-      {/* Display 'No listings available' only if not loading and listings array is empty */}
-      {listings.length === 0 && !loading ? (
-        <div>No listings available.</div>
+      {listings.length === 0 ? (
+        <p>No listings found matching your criteria.</p>
       ) : (
-        <ul className="produce-list">
-          {listings.map((listing) => (
-            <li key={listing.id}>
-              <strong>Farmer:</strong> <span>{listing.farmer_name}</span>
-              <strong>Produce:</strong> <span>{listing.produce_type}</span>
-              <strong>Quantity:</strong> <span>{listing.quantity}</span>{' '}
-              <span>{listing.unit}</span>
-              <strong>Price:</strong> <span>{listing.price_per_unit}</span>
-              <strong>Location:</strong> <span>{listing.location}</span>
-              {listing.description && (
-                <>
-                  <strong>Description:</strong>{' '}
-                  <span>{listing.description}</span>
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+        <>
+          <ul className="produce-list">
+            {listings.map((listing) => (
+              <li key={listing.id} className="produce-item">
+                <h3>{listing.produce_type}</h3>
+                <p>
+                  <strong>Farmer:</strong> {listing.farmer_name}
+                </p>
+                <p>
+                  <strong>Quantity:</strong> {listing.quantity} {listing.unit}
+                </p>
+                <p>
+                  <strong>Price:</strong> ZMW {listing.price_per_unit}
+                </p>
+                <p>
+                  <strong>Location:</strong> {listing.location}
+                </p>
+                {listing.description && (
+                  <p>
+                    <strong>Description:</strong> {listing.description}
+                  </p>
+                )}
+                <p>
+                  <small>
+                    Listed on:{' '}
+                    {new Date(listing.listing_date).toLocaleDateString()}
+                  </small>
+                </p>
+                {isAuthenticated && user && user.userId !== listing.user_id && (
+                  <button
+                    onClick={() =>
+                      handleContactFarmer(
+                        listing.id,
+                        listing.user_id,
+                        listing.farmer_name,
+                        listing.produce_type
+                      )
+                    }
+                    className="contact-button"
+                  >
+                    Contact Farmer
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
 
-      <div className="pagination-controls">
-        <button onClick={handlePreviousPage} disabled={page === 1}>
-          Previous
-        </button>
-        <span>
-          {' '}
-          Page {page} of {totalPages}{' '}
-        </span>{' '}
-        {/* Display current and total pages */}
-        <button onClick={handleNextPage} disabled={page >= totalPages}>
-          Next
-        </button>
-      </div>
+          <div className="pagination-controls">
+            <button onClick={handlePrevPage} disabled={page === 1}>
+              Previous
+            </button>
+            <span>
+              Page {page} of {totalPages}
+            </span>
+            <button onClick={handleNextPage} disabled={page === totalPages}>
+              Next
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

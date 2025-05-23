@@ -1,5 +1,5 @@
 // frontend/src/App.js
-import React, { useEffect } from 'react'; // Import useEffect
+import React, { useEffect } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -10,6 +10,10 @@ import {
 import ProduceList from './components/ProduceList';
 import Register from './components/Register';
 import Login from './components/Login';
+import CreateListingForm from './components/CreateListingForm';
+import MyListings from './components/MyListings';
+import EditListingForm from './components/EditListingForm';
+import MessageCenter from './components/MessageCenter'; // Import MessageCenter
 import { AuthProvider, useAuth } from './context/AuthContext';
 import './App.css';
 
@@ -21,7 +25,7 @@ const AuthNavLinks = () => {
     logout();
   };
 
-  const displayName = user ? user.username || user.email : ''; // Prioritize username, then email
+  const displayName = user ? user.username || user.email : '';
 
   return (
     <ul>
@@ -31,8 +35,17 @@ const AuthNavLinks = () => {
       {isAuthenticated ? (
         <>
           <li>
-            <span>Welcome, {displayName}!</span>{' '}
-            {/* Display username or email */}
+            <Link to="/create-listing">Create Listing</Link>
+          </li>
+          <li>
+            <Link to="/my-listings">My Listings</Link>
+          </li>
+          <li>
+            <Link to="/inbox">Inbox</Link>{' '}
+            {/* NEW: Link to Inbox (will implement Inbox.js next) */}
+          </li>
+          <li>
+            <span>Welcome, {displayName}!</span>
           </li>
           <li>
             <button onClick={handleLogout} className="nav-button">
@@ -86,8 +99,40 @@ function App() {
               <Route path="/" element={<ProduceList />} />
               <Route path="/register" element={<Register />} />
               <Route path="/login" element={<Login />} />
-              {/* Example of a protected route if you have one */}
-              {/* <Route path="/create-listing" element={<ProtectedRoute><CreateListingForm /></ProtectedRoute>} /> */}
+              <Route
+                path="/create-listing"
+                element={
+                  <ProtectedRoute>
+                    <CreateListingForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-listings"
+                element={
+                  <ProtectedRoute>
+                    <MyListings />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/edit-listing/:id"
+                element={
+                  <ProtectedRoute>
+                    <EditListingForm />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/messages/:listingId/:otherUserId" // NEW: Route for MessageCenter
+                element={
+                  <ProtectedRoute>
+                    <MessageCenter />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Route for Inbox will be added when Inbox.js is created */}
+              {/* <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} /> */}
             </Routes>
           </div>
 

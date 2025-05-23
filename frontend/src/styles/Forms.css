@@ -54,6 +54,14 @@
   background-color: #0056b3; /* Darker shade on hover */
 }
 
+.form-button.secondary-button {
+  background-color: #6c757d; /* A grey color for secondary action */
+}
+
+.form-button.secondary-button:hover {
+  background-color: #5a6268;
+}
+
 .message-success {
   color: green;
   text-align: center;

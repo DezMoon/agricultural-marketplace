@@ -1,8 +1,10 @@
+// backend/routes/produce.js
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
-const authMiddleware = require('../middleware/authMiddleware');
+const authMiddleware = require('../middleware/authMiddleware'); // Import the middleware
 
+// Middleware to parse JSON request bodies
 router.use(express.json());
 
 // POST endpoint to create a new produce listing (PROTECTED)
@@ -17,7 +19,7 @@ router.post('/listings', authMiddleware, async (req, res) => {
       location,
       description,
     } = req.body;
-    const user_id = req.user.userId;
+    const user_id = req.user.userId; // Get the user ID from the authenticated user
 
     const newListing = await pool.query(
       'INSERT INTO produce_listings (farmer_name, produce_type, quantity, unit, price_per_unit, location, description, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
@@ -35,6 +37,7 @@ router.post('/listings', authMiddleware, async (req, res) => {
     const createdListing = newListing.rows[0];
     res.status(201).json(createdListing);
 
+    // Emit the Socket.IO event using the io object from the request
     req.io.emit('newListing', createdListing);
   } catch (error) {
     console.error('Error creating listing:', error);
@@ -139,6 +142,153 @@ router.get('/listings', async (req, res) => {
   } catch (error) {
     console.error('Error fetching listings:', error);
     res.status(500).json({ error: 'Failed to fetch listings' });
+  }
+});
+
+// NEW: GET endpoint to retrieve produce listings for the authenticated user (PROTECTED)
+router.get('/my-listings', authMiddleware, async (req, res) => {
+  try {
+    const user_id = req.user.userId; // Get user ID from authenticated token
+    const mylistings = await pool.query(
+      'SELECT * FROM produce_listings WHERE user_id = $1 ORDER BY listing_date DESC',
+      [user_id]
+    );
+    res.json(mylistings.rows);
+  } catch (error) {
+    console.error('Error fetching user listings:', error);
+    res.status(500).json({ error: 'Failed to fetch user listings' });
+  }
+});
+
+// NEW: PUT endpoint to update a specific produce listing (PROTECTED, with ownership check)
+router.put('/listings/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params; // Listing ID from URL parameter
+    const user_id = req.user.userId; // User ID from authenticated token
+    const {
+      farmer_name,
+      produce_type,
+      quantity,
+      unit,
+      price_per_unit,
+      location,
+      description,
+    } = req.body;
+
+    // First, check if the listing belongs to the authenticated user
+    const existingListing = await pool.query(
+      'SELECT user_id FROM produce_listings WHERE id = $1',
+      [id]
+    );
+
+    if (existingListing.rows.length === 0) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    if (existingListing.rows[0].user_id !== user_id) {
+      return res
+        .status(403)
+        .json({ error: 'You are not authorized to update this listing' });
+    }
+
+    // Update the listing
+    const updatedListing = await pool.query(
+      'UPDATE produce_listings SET farmer_name = $1, produce_type = $2, quantity = $3, unit = $4, price_per_unit = $5, location = $6, description = $7 WHERE id = $8 RETURNING *',
+      [
+        farmer_name,
+        produce_type,
+        quantity,
+        unit,
+        price_per_unit,
+        location,
+        description,
+        id,
+      ]
+    );
+
+    if (updatedListing.rows.length === 0) {
+      return res
+        .status(404)
+        .json({ error: 'Listing not found after update attempt' });
+    }
+
+    res.json(updatedListing.rows[0]);
+  } catch (error) {
+    console.error('Error updating listing:', error);
+    res.status(500).json({ error: 'Failed to update listing' });
+  }
+});
+
+// NEW: DELETE endpoint to delete a specific produce listing (PROTECTED, with ownership check)
+router.delete('/listings/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params; // Listing ID from URL parameter
+    const user_id = req.user.userId; // User ID from authenticated token
+
+    // First, check if the listing belongs to the authenticated user
+    const existingListing = await pool.query(
+      'SELECT user_id FROM produce_listings WHERE id = $1',
+      [id]
+    );
+
+    if (existingListing.rows.length === 0) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    if (existingListing.rows[0].user_id !== user_id) {
+      return res
+        .status(403)
+        .json({ error: 'You are not authorized to delete this listing' });
+    }
+
+    // Delete the listing
+    const deletedListing = await pool.query(
+      'DELETE FROM produce_listings WHERE id = $1 RETURNING id',
+      [id]
+    );
+
+    if (deletedListing.rows.length === 0) {
+      return res
+        .status(404)
+        .json({ error: 'Listing not found after delete attempt' });
+    }
+
+    res.json({
+      message: 'Listing deleted successfully',
+      id: deletedListing.rows[0].id,
+    });
+  } catch (error) {
+    console.error('Error deleting listing:', error);
+    res.status(500).json({ error: 'Failed to delete listing' });
+  }
+});
+
+// NEW: GET endpoint to retrieve a single produce listing by ID (PROTECTED, with ownership check)
+router.get('/listings/:id', authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const user_id = req.user.userId; // User ID from authenticated token
+
+    const listing = await pool.query(
+      'SELECT * FROM produce_listings WHERE id = $1',
+      [id]
+    );
+
+    if (listing.rows.length === 0) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    // Crucial: Check if the fetched listing belongs to the authenticated user
+    if (listing.rows[0].user_id !== user_id) {
+      return res.status(403).json({
+        error: 'You are not authorized to view this listing for editing',
+      });
+    }
+
+    res.json(listing.rows[0]);
+  } catch (error) {
+    console.error('Error fetching single listing:', error);
+    res.status(500).json({ error: 'Failed to fetch listing' });
   }
 });
 
