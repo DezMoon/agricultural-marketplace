@@ -13,7 +13,8 @@ import Login from './components/Login';
 import CreateListingForm from './components/CreateListingForm';
 import MyListings from './components/MyListings';
 import EditListingForm from './components/EditListingForm';
-import MessageCenter from './components/MessageCenter'; // Import MessageCenter
+import MessageCenter from './components/MessageCenter';
+import Inbox from './components/Inbox'; // Import Inbox
 import { AuthProvider, useAuth } from './context/AuthContext';
 import './App.css';
 
@@ -41,8 +42,7 @@ const AuthNavLinks = () => {
             <Link to="/my-listings">My Listings</Link>
           </li>
           <li>
-            <Link to="/inbox">Inbox</Link>{' '}
-            {/* NEW: Link to Inbox (will implement Inbox.js next) */}
+            <Link to="/inbox">Inbox</Link> {/* NEW: Link to Inbox */}
           </li>
           <li>
             <span>Welcome, {displayName}!</span>
@@ -124,15 +124,21 @@ function App() {
                 }
               />
               <Route
-                path="/messages/:listingId/:otherUserId" // NEW: Route for MessageCenter
+                path="/messages/:listingId/:otherUserId"
                 element={
                   <ProtectedRoute>
                     <MessageCenter />
                   </ProtectedRoute>
                 }
               />
-              {/* Route for Inbox will be added when Inbox.js is created */}
-              {/* <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} /> */}
+              <Route
+                path="/inbox" // NEW: Route for Inbox
+                element={
+                  <ProtectedRoute>
+                    <Inbox />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </div>
 
