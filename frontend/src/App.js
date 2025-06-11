@@ -16,6 +16,7 @@ import MyListings from './components/MyListings';
 import EditListingForm from './components/EditListingForm';
 import MessageCenter from './components/MessageCenter';
 import Inbox from './components/Inbox'; // Import Inbox
+import ListingDetails from './components/ListingDetails'; // Import ListingDetails
 import { AuthProvider, useAuth } from './context/AuthContext';
 import './App.css';
 
@@ -182,6 +183,8 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="/listing/:id" element={<ListingDetails />} />{' '}
+              {/* NEW: Route for ListingDetails */}
             </Routes>
           </div>
 

@@ -8,6 +8,8 @@ const userRoutes = require('./routes/users');
 const messageRoutes = require('./routes/messages'); // NEW: Import message routes
 const { Server } = require('socket.io');
 const http = require('http');
+const path = require('path');
+const multer = require('multer');
 
 const app = express();
 const server = http.createServer(app);
@@ -28,6 +30,9 @@ app.use((req, res, next) => {
   req.io = io;
   next();
 });
+
+// Serve uploaded images statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/produce', produceRoutes);

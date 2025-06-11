@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import { useAuth } from '../context/AuthContext'; // Import useAuth
 import './ProduceList.css';
+import defaultImage from '../assets/default-produce.jpg'; // Add this import
 
 const socket = io('http://localhost:3000'); // Connect to your backend Socket.IO server
 
@@ -202,45 +203,46 @@ const ProduceList = () => {
           <ul className="produce-list">
             {listings.map((listing) => (
               <li key={listing.id} className="produce-item">
-                <h3>{listing.produce_type}</h3>
-                <p>
-                  <strong>Farmer:</strong> {listing.farmer_name}
-                </p>
-                <p>
-                  <strong>Quantity:</strong> {listing.quantity} {listing.unit}
-                </p>
-                <p>
-                  <strong>Price:</strong> ZMW {listing.price_per_unit}
-                </p>
-                <p>
-                  <strong>Location:</strong> {listing.location}
-                </p>
-                {listing.description && (
-                  <p>
-                    <strong>Description:</strong> {listing.description}
-                  </p>
-                )}
-                <p>
-                  <small>
-                    Listed on:{' '}
-                    {new Date(listing.listing_date).toLocaleDateString()}
-                  </small>
-                </p>
-                {isAuthenticated && user && user.userId !== listing.user_id && (
-                  <button
-                    onClick={() =>
-                      handleContactFarmer(
-                        listing.id,
-                        listing.user_id,
-                        listing.farmer_name,
-                        listing.produce_type
-                      )
-                    }
-                    className="contact-button"
+                <div
+                  key={listing.id}
+                  onClick={() => navigate(`/listing/${listing.id}`)}
+                  style={{
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'stretch',
+                  }}
+                >
+                  <div style={{ flex: '1 1 50%', maxWidth: '50%' }}>
+                    <img
+                      src={
+                        listing.image_url
+                          ? `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}${listing.image_url}`
+                          : defaultImage
+                      }
+                      alt={listing.produce_type}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '8px 0 0 8px',
+                      }}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      flex: '1 1 50%',
+                      padding: '16px',
+                      textAlign: 'left',
+                    }}
                   >
-                    Contact Farmer
-                  </button>
-                )}
+                    <h3>{listing.produce_type}</h3>
+                    <p>{listing.description}</p>
+                    <small>
+                      Date posted:{' '}
+                      {new Date(listing.listing_date).toLocaleDateString()}
+                    </small>
+                  </div>
+                </div>
               </li>
             ))}
           </ul>

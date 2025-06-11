@@ -3,27 +3,46 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 const authMiddleware = require('../middleware/authMiddleware'); // Import the middleware
+const multer = require('multer');
+const path = require('path');
 
 // Middleware to parse JSON request bodies
 router.use(express.json());
 
-// POST endpoint to create a new produce listing (PROTECTED)
-router.post('/listings', authMiddleware, async (req, res) => {
-  try {
-    const {
-      farmer_name,
-      produce_type,
-      quantity,
-      unit,
-      price_per_unit,
-      location,
-      description,
-    } = req.body;
-    const user_id = req.user.userId; // Get the user ID from the authenticated user
+// Multer storage config
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, '../uploads'));
+  },
+  filename: function (req, file, cb) {
+    // Use Date.now() for unique file names
+    cb(null, Date.now() + '-' + file.originalname);
+  },
+});
+const upload = multer({
+  storage,
+  fileFilter: function (req, file, cb) {
+    const allowedTypes = /jpeg|jpg|png|gif/;
+    const extname = allowedTypes.test(
+      path.extname(file.originalname).toLowerCase()
+    );
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (extname && mimetype) {
+      return cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed!'));
+    }
+  },
+});
 
-    const newListing = await pool.query(
-      'INSERT INTO produce_listings (farmer_name, produce_type, quantity, unit, price_per_unit, location, description, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *',
-      [
+// POST endpoint to create a new produce listing (PROTECTED, with image upload)
+router.post(
+  '/listings',
+  authMiddleware,
+  upload.single('image'),
+  async (req, res) => {
+    try {
+      const {
         farmer_name,
         produce_type,
         quantity,
@@ -31,19 +50,37 @@ router.post('/listings', authMiddleware, async (req, res) => {
         price_per_unit,
         location,
         description,
-        user_id,
-      ]
-    );
-    const createdListing = newListing.rows[0];
-    res.status(201).json(createdListing);
+      } = req.body;
+      const user_id = req.user.userId;
 
-    // Emit the Socket.IO event using the io object from the request
-    req.io.emit('newListing', createdListing);
-  } catch (error) {
-    console.error('Error creating listing:', error);
-    res.status(500).json({ error: 'Failed to create listing' });
+      // If an image was uploaded, set image_url to its path
+      let image_url = null;
+      if (req.file) {
+        image_url = `/uploads/${req.file.filename}`;
+      }
+
+      const newListing = await pool.query(
+        'INSERT INTO produce_listings (farmer_name, produce_type, quantity, unit, price_per_unit, location, description, image_url, user_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *',
+        [
+          farmer_name,
+          produce_type,
+          quantity,
+          unit,
+          price_per_unit,
+          location,
+          description,
+          image_url,
+          user_id,
+        ]
+      );
+      const createdListing = newListing.rows[0];
+      res.status(201).json(createdListing);
+    } catch (error) {
+      console.error('Error creating listing:', error);
+      res.status(500).json({ error: 'Failed to create listing' });
+    }
   }
-});
+);
 
 // GET endpoint to retrieve all produce listings (with filtering, searching, pagination, and sorting)
 router.get('/listings', async (req, res) => {
@@ -263,31 +300,20 @@ router.delete('/listings/:id', authMiddleware, async (req, res) => {
   }
 });
 
-// NEW: GET endpoint to retrieve a single produce listing by ID (PROTECTED, with ownership check)
-router.get('/listings/:id', authMiddleware, async (req, res) => {
+// GET a single produce listing by ID
+router.get('/listings/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const user_id = req.user.userId; // User ID from authenticated token
-
-    const listing = await pool.query(
+    const result = await pool.query(
       'SELECT * FROM produce_listings WHERE id = $1',
       [id]
     );
-
-    if (listing.rows.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Listing not found' });
     }
-
-    // Crucial: Check if the fetched listing belongs to the authenticated user
-    if (listing.rows[0].user_id !== user_id) {
-      return res.status(403).json({
-        error: 'You are not authorized to view this listing for editing',
-      });
-    }
-
-    res.json(listing.rows[0]);
+    res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error fetching single listing:', error);
+    console.error('Error fetching listing:', error);
     res.status(500).json({ error: 'Failed to fetch listing' });
   }
 });

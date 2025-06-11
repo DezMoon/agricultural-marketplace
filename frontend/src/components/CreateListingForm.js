@@ -14,67 +14,63 @@ const CreateListingForm = () => {
   const [pricePerUnit, setPricePerUnit] = useState('');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
+  const [image, setImage] = useState(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+
+  const handleImageChange = (e) => {
+    setImage(e.target.files[0]);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setMessage('');
 
-    // Ensure user is logged in
-    if (!user) {
-      setError('You must be logged in to create a listing.');
-      return;
+    const formData = new FormData();
+    formData.append('produce_type', produceType);
+    formData.append('quantity', quantity);
+    formData.append('unit', unit);
+    formData.append('price_per_unit', pricePerUnit);
+    formData.append('location', location);
+    formData.append('description', description);
+    formData.append('farmer_name', user?.username || user?.email || '');
+    if (image) {
+      formData.append('image', image);
     }
 
-    // Since farmer_name is not collected in the form, use the logged-in username
-    const farmer_name = user.username || user.email; // Fallback to email if username somehow isn't there
-
     try {
-      const token = localStorage.getItem('token'); // Get token from local storage
-
-      const response = await fetch(
-        'http://localhost:3000/api/produce/listings',
+      const res = await fetch(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/produce/listings`,
         {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`, // Send the token
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
-          body: JSON.stringify({
-            farmer_name, // Taken from authenticated user
-            produce_type: produceType,
-            quantity: parseFloat(quantity), // Convert to number
-            unit,
-            price_per_unit: parseFloat(pricePerUnit), // Convert to number
-            location,
-            description,
-          }),
+          body: formData,
         }
       );
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage('Produce listing created successfully!');
-        // Clear form
-        setProduceType('');
-        setQuantity('');
-        setUnit('');
-        setPricePerUnit('');
-        setLocation('');
-        setDescription('');
-        // Optionally redirect after a short delay
-        setTimeout(() => {
-          navigate('/'); // Go back to produce listings
-        }, 2000);
-      } else {
-        setError(data.error || 'Failed to create listing.');
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to create listing');
       }
+
+      setMessage('Listing created successfully!');
+      // Clear form
+      setProduceType('');
+      setQuantity('');
+      setUnit('');
+      setPricePerUnit('');
+      setLocation('');
+      setDescription('');
+      setImage(null);
+      // Optionally redirect after a short delay
+      setTimeout(() => {
+        navigate('/my-listings'); // Go to user's listings
+      }, 2000);
     } catch (err) {
-      console.error('Error creating listing:', err);
-      setError('An error occurred while connecting to the server.');
+      setError(err.message);
     }
   };
 
@@ -83,7 +79,7 @@ const CreateListingForm = () => {
       <h2>Create New Produce Listing</h2>
       {message && <p className="message-success">{message}</p>}
       {error && <p className="message-error">{error}</p>}
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} encType="multipart/form-data">
         <div className="form-group">
           <label htmlFor="produceType">Produce Type:</label>
           <input
@@ -151,6 +147,15 @@ const CreateListingForm = () => {
             placeholder="e.g., Freshly harvested, organic, 2024 season"
             rows="4"
           ></textarea>
+        </div>
+        <div className="form-group">
+          <label htmlFor="image">Image (optional):</label>
+          <input
+            type="file"
+            id="image"
+            accept="image/*"
+            onChange={handleImageChange}
+          />
         </div>
         <button type="submit" className="form-button">
           Create Listing
