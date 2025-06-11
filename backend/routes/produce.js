@@ -278,7 +278,10 @@ router.delete('/listings/:id', authMiddleware, async (req, res) => {
         .json({ error: 'You are not authorized to delete this listing' });
     }
 
-    // Delete the listing
+    // Delete messages referencing this listing
+    await pool.query('DELETE FROM messages WHERE listing_id = $1', [id]);
+
+    // Now delete the listing
     const deletedListing = await pool.query(
       'DELETE FROM produce_listings WHERE id = $1 RETURNING id',
       [id]

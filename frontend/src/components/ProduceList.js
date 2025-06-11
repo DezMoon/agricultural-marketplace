@@ -202,47 +202,26 @@ const ProduceList = () => {
         <>
           <ul className="produce-list">
             {listings.map((listing) => (
-              <li key={listing.id} className="produce-item">
-                <div
-                  key={listing.id}
-                  onClick={() => navigate(`/listing/${listing.id}`)}
-                  style={{
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'stretch',
-                  }}
-                >
-                  <div style={{ flex: '1 1 50%', maxWidth: '50%' }}>
-                    <img
-                      src={
-                        listing.image_url
-                          ? `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}${listing.image_url}`
-                          : defaultImage
-                      }
-                      alt={listing.produce_type}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        borderRadius: '8px 0 0 8px',
-                      }}
-                    />
-                  </div>
-                  <div
-                    style={{
-                      flex: '1 1 50%',
-                      padding: '16px',
-                      textAlign: 'left',
-                    }}
-                  >
-                    <h3>{listing.produce_type}</h3>
-                    <p>{listing.description}</p>
-                    <small>
-                      Date posted:{' '}
-                      {new Date(listing.listing_date).toLocaleDateString()}
-                    </small>
-                  </div>
-                </div>
+              <li
+                key={listing.id}
+                className="produce-item"
+                onClick={() => navigate(`/listing/${listing.id}`)}
+                style={{ cursor: 'pointer' }}
+              >
+                <img
+                  src={
+                    listing.image_url
+                      ? `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}${listing.image_url}`
+                      : defaultImage
+                  }
+                  alt={listing.produce_type}
+                />
+                <h3>{listing.produce_type}</h3>
+                <p>{listing.description}</p>
+                <small>
+                  Date posted:{' '}
+                  {new Date(listing.listing_date).toLocaleDateString()}
+                </small>
               </li>
             ))}
           </ul>

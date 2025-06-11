@@ -113,6 +113,16 @@
   font-size: 0.85em;
 }
 
+.produce-item img {
+  width: 100%;
+  height: 50%;
+  object-fit: cover;
+  border-radius: 8px;
+  display: block;
+  margin: 0 auto 18px auto; /* Center image and add space below */
+  background: #f3f3f3;
+}
+
 .contact-button {
   background-color: #28a745;
   color: white;

@@ -140,6 +140,55 @@ const ListingDetails = () => {
           )}
         </div>
       </div>
+      {/* Show login/register prompt if not authenticated */}
+      {!isAuthenticated && listing && (
+        <div
+          style={{
+            marginTop: 32,
+            padding: 24,
+            border: '2px solid #d32f2f',
+            borderRadius: 8,
+            background: '#fff8f8',
+            textAlign: 'center',
+          }}
+        >
+          <p style={{ fontSize: 18, marginBottom: 16 }}>
+            Want to get <strong>{listing.produce_type}</strong>?{' '}
+            <span style={{ color: '#d32f2f' }}>Login</span> or{' '}
+            <span style={{ color: '#1976d2' }}>Register</span> to contact{' '}
+            <strong>{listing.farmer_name}</strong>.
+          </p>
+          <button
+            style={{
+              marginRight: 16,
+              padding: '8px 20px',
+              background: '#1976d2',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 6,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+            onClick={() => navigate('/login')}
+          >
+            Login
+          </button>
+          <button
+            style={{
+              padding: '8px 20px',
+              background: '#388e3c',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 6,
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+            onClick={() => navigate('/register')}
+          >
+            Register
+          </button>
+        </div>
+      )}
     </div>
   );
 };
