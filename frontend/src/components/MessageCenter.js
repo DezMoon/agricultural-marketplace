@@ -132,6 +132,16 @@ const MessageCenter = () => {
     }
   };
 
+  // After marking messages as read in MessageCenter.js
+  useEffect(() => {
+    const markAsRead = async () => {
+      // Call your backend to mark messages as read
+      // After successful mark, emit refresh event
+      socket.emit('refreshUnread', user.userId);
+    };
+    markAsRead();
+  }, [listingId, otherUserId, user.userId]);
+
   if (loading) {
     return (
       <div className="message-center-container">Loading conversation...</div>

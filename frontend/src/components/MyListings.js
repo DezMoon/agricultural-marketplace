@@ -11,6 +11,8 @@ const MyListings = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState(null);
 
   const fetchMyListings = async () => {
     if (!isAuthenticated || !user) {
@@ -75,18 +77,55 @@ const MyListings = () => {
 
       if (response.ok) {
         setMessage('Listing deleted successfully!');
-        setMyListings(myListings.filter((listing) => listing.id !== listingId)); // Remove from UI
-      } else if (response.status === 401 || response.status === 403) {
-        setError(
-          'Unauthorized to delete this listing or session expired. Please log in again.'
-        );
+        setMyListings(myListings.filter((listing) => listing.id !== listingId));
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Failed to delete listing.');
+        // Check for foreign key error (customize this check based on your backend error message)
+        if (
+          errorData.error &&
+          errorData.error.includes('referenced from table "messages"')
+        ) {
+          setPendingDeleteId(listingId);
+          setShowModal(true);
+        } else {
+          setError(errorData.error || 'Failed to delete listing.');
+        }
       }
     } catch (err) {
       console.error('Error deleting listing:', err);
       setError('An error occurred while connecting to the server.');
+    }
+  };
+
+  // Function to force delete listing and its messages
+  const handleForceDelete = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `http://localhost:3000/api/produce/listings/${pendingDeleteId}?force=true`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.ok) {
+        setMessage('Listing and related conversations deleted successfully!');
+        setMyListings(
+          myListings.filter((listing) => listing.id !== pendingDeleteId)
+        );
+      } else {
+        const errorData = await response.json();
+        setError(
+          errorData.error || 'Failed to delete listing and conversations.'
+        );
+      }
+    } catch (err) {
+      setError('An error occurred while connecting to the server.');
+    } finally {
+      setShowModal(false);
+      setPendingDeleteId(null);
     }
   };
 
@@ -158,6 +197,27 @@ const MyListings = () => {
           </li>
         ))}
       </ul>
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Cannot Delete Listing</h3>
+            <p>
+              There are conversations in your inbox referencing this listing.
+              Deleting this listing will also delete all related conversations.
+              Do you want to continue?
+            </p>
+            <button onClick={handleForceDelete} className="delete-button">
+              Continue & Delete All
+            </button>
+            <button
+              onClick={() => setShowModal(false)}
+              className="cancel-button"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

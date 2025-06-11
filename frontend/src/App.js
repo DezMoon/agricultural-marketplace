@@ -1,5 +1,5 @@
 // frontend/src/App.js
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -7,6 +7,7 @@ import {
   Link,
   useNavigate,
 } from 'react-router-dom';
+import io from 'socket.io-client';
 import ProduceList from './components/ProduceList';
 import Register from './components/Register';
 import Login from './components/Login';
@@ -18,9 +19,46 @@ import Inbox from './components/Inbox'; // Import Inbox
 import { AuthProvider, useAuth } from './context/AuthContext';
 import './App.css';
 
+const socket = io(process.env.REACT_APP_API_URL || 'http://localhost:3000');
+
 // Component for the navigation links, now aware of auth state
 const AuthNavLinks = () => {
   const { user, logout, isAuthenticated } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Fetch unread count on mount and when user changes
+  useEffect(() => {
+    if (!isAuthenticated || !user) return;
+
+    const fetchUnread = async () => {
+      const token = localStorage.getItem('token');
+      const res = await fetch(
+        'http://localhost:3000/api/messages/unread-count',
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadCount(data.count);
+      }
+    };
+
+    fetchUnread();
+
+    socket.emit('joinRoom', user.userId);
+
+    // On new message, always fetch the latest count
+    socket.on('newMessage', fetchUnread);
+
+    // On refreshUnread, also fetch the latest count
+    socket.on('refreshUnread', fetchUnread);
+
+    return () => {
+      socket.off('newMessage', fetchUnread);
+      socket.off('refreshUnread', fetchUnread);
+    };
+  }, [isAuthenticated, user]);
 
   const handleLogout = () => {
     logout();
@@ -41,8 +79,13 @@ const AuthNavLinks = () => {
           <li>
             <Link to="/my-listings">My Listings</Link>
           </li>
-          <li>
-            <Link to="/inbox">Inbox</Link> {/* NEW: Link to Inbox */}
+          <li style={{ position: 'relative' }}>
+            <Link to="/inbox">
+              Inbox
+              {unreadCount > 0 && (
+                <span className="inbox-badge">{unreadCount}</span>
+              )}
+            </Link>
           </li>
           <li>
             <span>Welcome, {displayName}!</span>

@@ -123,6 +123,7 @@
   font-size: 1em;
   margin-top: auto; /* Push button to bottom of the flex item */
   transition: background-color 0.2s ease;
+  align-self: center;
 }
 
 .contact-button:hover {

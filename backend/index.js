@@ -53,6 +53,10 @@ io.on('connection', (socket) => {
     );
   });
 
+  socket.on('refreshUnread', (userId) => {
+    io.to(`user-${userId}`).emit('refreshUnread');
+  });
+
   socket.on('disconnect', () => {
     console.log('user disconnected:', socket.id);
   });

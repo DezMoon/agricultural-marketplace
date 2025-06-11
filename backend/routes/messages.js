@@ -217,4 +217,18 @@ router.get('/inbox', authMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/messages/unread-count - Get total unread messages for the authenticated user
+router.get('/unread-count', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const result = await pool.query(
+      'SELECT COUNT(*) FROM messages WHERE receiver_id = $1 AND read_status = FALSE',
+      [userId]
+    );
+    res.json({ count: parseInt(result.rows[0].count, 10) });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch unread count' });
+  }
+});
+
 module.exports = router;
