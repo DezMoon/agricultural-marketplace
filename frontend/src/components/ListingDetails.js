@@ -101,10 +101,12 @@ const ListingDetails = () => {
             <strong>Description:</strong> {listing.description}
           </p>
           <p>
-            <strong>Quantity:</strong> {listing.quantity} {listing.unit}
+            <strong>Quantity:</strong>{' '}
+            {Number(listing.quantity).toLocaleString()} {listing.unit}
           </p>
           <p>
-            <strong>Price per unit:</strong> {listing.price_per_unit}
+            <strong>Price per unit:</strong> K
+            {Number(listing.price_per_unit).toLocaleString()}
           </p>
           <p>
             <strong>Location:</strong> {listing.location}

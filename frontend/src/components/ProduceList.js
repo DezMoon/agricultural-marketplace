@@ -217,7 +217,12 @@ const ProduceList = () => {
                   alt={listing.produce_type}
                 />
                 <h3>{listing.produce_type}</h3>
+                <p>Farmer: {listing.farmer_name}</p>
                 <p>{listing.description}</p>
+                <h4>
+                  Price: K
+                  {Number(listing.price_per_unit).toLocaleString()}
+                </h4>
                 <small>
                   Date posted:{' '}
                   {new Date(listing.listing_date).toLocaleDateString()}

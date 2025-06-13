@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.clear(); // This removes all keys from local storage
     setUser(null);
     navigate('/login');
   };
