@@ -116,3 +116,39 @@
   text-align: center;
   margin-top: 10px;
 }
+
+/* Dark mode styles */
+body.dark-mode .message-center-container {
+  background-color: #23272b;
+  color: #e0e0e0;
+}
+
+body.dark-mode .message-list {
+  background-color: #23272b;
+  border-color: #333;
+}
+
+body.dark-mode .message-item.sent {
+  background-color: #2d333b;
+  color: #e0e0e0;
+}
+
+body.dark-mode .message-item.received {
+  background-color: #23272b;
+  color: #e0e0e0;
+}
+
+body.dark-mode .message-input-form textarea {
+  background-color: #181a1b;
+  color: #e0e0e0;
+  border-color: #444c56;
+}
+
+body.dark-mode .message-input-form button {
+  background-color: #444c56;
+  color: #fff;
+}
+
+body.dark-mode .message-input-form button:hover {
+  background-color: #2d333b;
+}

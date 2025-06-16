@@ -129,3 +129,49 @@ footer {
   font-weight: bold;
   z-index: 1;
 }
+
+body.dark-mode {
+  background-color: #181a1b;
+  color: #e0e0e0;
+}
+
+body.dark-mode nav,
+body.dark-mode footer {
+  background-color: #222c36;
+}
+
+body.dark-mode .App,
+body.dark-mode .produce-listings-container,
+body.dark-mode .produce-list-container,
+body.dark-mode .my-listings-container,
+body.dark-mode .inbox-container,
+body.dark-mode .message-center-container,
+body.dark-mode .form-container {
+  background-color: #23272b;
+  color: #e0e0e0;
+}
+
+body.dark-mode .produce-item,
+body.dark-mode .my-listing-item,
+body.dark-mode .conversation-item {
+  background-color: #23272b;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+body.dark-mode .contact-button,
+body.dark-mode .listing-actions .edit-button,
+body.dark-mode .listing-actions .delete-button,
+body.dark-mode .form-button {
+  background-color: #444c56;
+  color: #fff;
+}
+
+body.dark-mode .contact-button:hover,
+body.dark-mode .listing-actions .edit-button:hover,
+body.dark-mode .listing-actions .delete-button:hover,
+body.dark-mode .form-button:hover {
+  background-color: #2d333b;
+}
+
+/* Add more overrides as needed for your components */

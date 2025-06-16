@@ -179,3 +179,33 @@
   text-align: center;
   margin-top: 20px;
 }
+
+/* Add at the bottom of ProduceList.css */
+body.dark-mode .produce-list-container {
+  background-color: #23272b;
+  color: #e0e0e0;
+}
+
+body.dark-mode .produce-item {
+  background-color: #23272b;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+body.dark-mode .contact-button {
+  background-color: #444c56;
+  color: #fff;
+}
+
+body.dark-mode .contact-button:hover {
+  background-color: #2d333b;
+}
+
+body.dark-mode .pagination-controls button {
+  background-color: #444c56;
+  color: #fff;
+}
+
+body.dark-mode .pagination-controls button:hover:not(:disabled) {
+  background-color: #2d333b;
+}

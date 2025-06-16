@@ -75,3 +75,34 @@
   margin-top: 15px;
   font-weight: bold;
 }
+
+/* Add at the bottom of Forms.css */
+body.dark-mode .form-container {
+  background-color: #23272b;
+  color: #e0e0e0;
+}
+
+body.dark-mode .form-group input[type='text'],
+body.dark-mode .form-group input[type='email'],
+body.dark-mode .form-group input[type='password'] {
+  background-color: #181a1b;
+  color: #e0e0e0;
+  border-color: #444c56;
+}
+
+body.dark-mode .form-button {
+  background-color: #444c56;
+  color: #fff;
+}
+
+body.dark-mode .form-button:hover {
+  background-color: #2d333b;
+}
+
+body.dark-mode .form-button.secondary-button {
+  background-color: #333;
+}
+
+body.dark-mode .form-button.secondary-button:hover {
+  background-color: #222;
+}

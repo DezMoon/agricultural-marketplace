@@ -18,6 +18,7 @@ import MessageCenter from './components/MessageCenter';
 import Inbox from './components/Inbox'; // Import Inbox
 import ListingDetails from './components/ListingDetails'; // Import ListingDetails
 import { AuthProvider, useAuth } from './context/AuthContext';
+import DarkModeToggle from './components/DarkModeToggle'; // Import the toggle
 import './App.css';
 
 const socket = io(process.env.REACT_APP_API_URL || 'http://localhost:3000');
@@ -130,12 +131,46 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
+  // Dark mode state and effect
+  const [darkMode, setDarkMode] = useState(() => {
+    // Read from localStorage or default to false
+    return localStorage.getItem('darkMode') === 'true';
+  });
+
+  useEffect(() => {
+    // Add/remove class on body
+    if (darkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+    // Persist preference
+    localStorage.setItem('darkMode', darkMode);
+  }, [darkMode]);
+
+  const toggleDarkMode = () => setDarkMode((prev) => !prev);
+
   return (
     <Router>
       <AuthProvider>
         <div className="App">
-          <nav>
-            <AuthNavLinks />
+          <nav
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              position: 'relative',
+            }}
+          >
+            {/* Toggle at top right */}
+            <DarkModeToggle
+              darkMode={darkMode}
+              toggleDarkMode={toggleDarkMode}
+            />
+            {/* Navigation links (centered) */}
+            <div style={{ flex: 1 }}>
+              <AuthNavLinks />
+            </div>
           </nav>
 
           <div className="produce-listings-container">

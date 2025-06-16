@@ -102,3 +102,26 @@
   font-weight: bold;
   margin-bottom: 15px;
 }
+
+/* Dark mode styles */
+body.dark-mode .my-listings-container {
+  background-color: #23272b;
+  color: #e0e0e0;
+}
+
+body.dark-mode .my-listing-item {
+  background-color: #23272b;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+body.dark-mode .listing-actions .edit-button,
+body.dark-mode .listing-actions .delete-button {
+  background-color: #444c56;
+  color: #fff;
+}
+
+body.dark-mode .listing-actions .edit-button:hover,
+body.dark-mode .listing-actions .delete-button:hover {
+  background-color: #2d333b;
+}

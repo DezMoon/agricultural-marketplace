@@ -48,3 +48,24 @@
 .produce-form button:hover {
   background-color: #218838; /* Darker green on hover */
 }
+
+body.dark-mode .produce-form {
+  background-color: #23272b;
+  color: #e0e0e0;
+}
+
+body.dark-mode .produce-form input,
+body.dark-mode .produce-form textarea {
+  background-color: #181a1b;
+  color: #e0e0e0;
+  border-color: #444c56;
+}
+
+body.dark-mode .produce-form button {
+  background-color: #444c56;
+  color: #fff;
+}
+
+body.dark-mode .produce-form button:hover {
+  background-color: #2d333b;
+}

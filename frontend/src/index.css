@@ -11,3 +11,19 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+body.dark-mode .inbox-container {
+  background-color: #23272b;
+  color: #e0e0e0;
+}
+
+body.dark-mode .conversation-item {
+  background-color: #23272b;
+  border-color: #333;
+  color: #e0e0e0;
+}
+
+body.dark-mode .unread-count {
+  background-color: #b52a37;
+  color: #fff;
+}
