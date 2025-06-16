@@ -220,8 +220,7 @@ const ProduceList = () => {
                 <p>Farmer: {listing.farmer_name}</p>
                 <p>{listing.description}</p>
                 <h4>
-                  Price: K
-                  {Number(listing.price_per_unit).toLocaleString()}
+                  Price: K{Number(listing.price_per_unit).toLocaleString()}
                 </h4>
                 <small>
                   Date posted:{' '}
