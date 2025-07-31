@@ -7,6 +7,17 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Refresh Tokens table
+CREATE TABLE refresh_tokens (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token VARCHAR(255) NOT NULL UNIQUE,
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    used_at TIMESTAMP,
+    is_revoked BOOLEAN DEFAULT FALSE
+);
+
 -- Produce Listings table
 CREATE TABLE produce_listings (
     id SERIAL PRIMARY KEY,
@@ -38,3 +49,5 @@ CREATE TABLE messages (
 CREATE INDEX idx_messages_receiver_id ON messages(receiver_id);
 CREATE INDEX idx_messages_listing_id ON messages(listing_id);
 CREATE INDEX idx_produce_listings_user_id ON produce_listings(user_id);
+CREATE INDEX idx_refresh_tokens_user_id ON refresh_tokens(user_id);
+CREATE INDEX idx_refresh_tokens_token ON refresh_tokens(token);

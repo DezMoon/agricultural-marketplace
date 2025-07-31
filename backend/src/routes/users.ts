@@ -67,13 +67,16 @@ router.post('/register', generalLimiter, ...userValidation.register, async (req:
 // POST /api/users/login - Login a user
 router.post('/login', authLimiter, ...userValidation.login, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { email, password }: UserLoginData = req.body;
+    const { identifier, password }: UserLoginData = req.body;
 
-    // Find the user by email
-    const userResult = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
-    );
+    // Check if identifier is email or username by checking if it contains '@'
+    const isEmail = identifier.includes('@');
+    const query = isEmail 
+      ? 'SELECT * FROM users WHERE email = $1'
+      : 'SELECT * FROM users WHERE username = $1';
+
+    // Find the user by email or username
+    const userResult = await pool.query(query, [identifier]);
 
     if (userResult.rows.length === 0) {
       res.status(401).json({ error: 'Invalid credentials' });
@@ -98,13 +101,18 @@ router.post('/login', authLimiter, ...userValidation.login, async (req: Request,
 
     const { accessToken, refreshToken } = jwtService.generateTokenPair(payload);
 
-    // Store refresh token in database
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-    await RefreshTokenModel.store(user.id, refreshToken, expiresAt);
+    // Try to store refresh token, but don't fail if table doesn't exist yet
+    try {
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+      await RefreshTokenModel.store(user.id, refreshToken, expiresAt);
+    } catch (error) {
+      console.warn('⚠️  Refresh token storage failed - table may not exist yet:', error instanceof Error ? error.message : error);
+      // Continue without refresh token for now
+    }
 
     const response: LoginResponse = {
       accessToken,
-      refreshToken,
+      refreshToken: refreshToken || '', // Provide refresh token if available
       expiresIn: '15m',
       user: {
         id: user.id,

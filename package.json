@@ -1,4 +1,21 @@
 {
+  "name": "agricultural-marketplace",
+  "version": "1.0.0",
+  "description": "Agricultural Marketplace - Full Stack Application",
+  "scripts": {
+    "dev": "concurrently \"npm run backend:dev\" \"npm run frontend:dev\"",
+    "start": "concurrently \"npm run backend:start\" \"npm run frontend:start\"",
+    "backend:dev": "cd backend && npm run dev",
+    "backend:start": "cd backend && npm start",
+    "backend:build": "cd backend && npm run build",
+    "frontend:dev": "cd frontend && npm run react-start",
+    "frontend:start": "cd frontend && npm start",
+    "frontend:build": "cd frontend && npm run build",
+    "build": "npm run backend:build && npm run frontend:build",
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "clean": "rm -rf node_modules backend/node_modules frontend/node_modules",
+    "test": "concurrently \"cd backend && npm test\" \"cd frontend && npm test\""
+  },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.19",
@@ -7,6 +24,7 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^24.1.0",
     "@types/pg": "^8.15.5",
+    "concurrently": "^8.2.2",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",

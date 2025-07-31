@@ -51,7 +51,7 @@ router.get('/listings', ...queryValidation.pagination, ...queryValidation.produc
       location,
       minPrice,
       maxPrice,
-      status = 'active',
+      status = 'available',
       search,
       page = 1,
       limit = 20
@@ -63,7 +63,7 @@ router.get('/listings', ...queryValidation.pagination, ...queryValidation.produc
         u.username as farmer_username,
         u.email as farmer_email
       FROM produce_listings pl
-      JOIN users u ON pl.farmer_id = u.id
+      JOIN users u ON pl.user_id = u.id
       WHERE TRUE
     `;
     
@@ -96,7 +96,7 @@ router.get('/listings', ...queryValidation.pagination, ...queryValidation.produc
     }
 
     if (status) {
-      query += ` AND pl.status = $${paramIndex}`;
+      query += ` AND pl.availability_status = $${paramIndex}`;
       queryParams.push(status);
       paramIndex++;
     }
@@ -108,9 +108,12 @@ router.get('/listings', ...queryValidation.pagination, ...queryValidation.produc
     }
 
     // Count total results
-    const countQuery = query.replace(/SELECT.*FROM/, 'SELECT COUNT(*) FROM');
+    const countQuery = query.replace(
+      /SELECT[\s\S]*?FROM/i, 
+      'SELECT COUNT(*) FROM'
+    );
     const countResult = await pool.query(countQuery, queryParams);
-    const total = parseInt(countResult.rows[0].count);
+    const total = parseInt(countResult.rows[0]?.count || '0');
 
     // Add pagination
     const offset = (page - 1) * limit;
@@ -163,7 +166,7 @@ router.get('/listings/:id', async (req: Request, res: Response): Promise<void> =
         u.username as farmer_username,
         u.email as farmer_email
       FROM produce_listings pl
-      JOIN users u ON pl.farmer_id = u.id
+      JOIN users u ON pl.user_id = u.id
       WHERE pl.id = $1
     `;
 
@@ -207,7 +210,7 @@ router.get('/my-listings', authMiddleware, ...queryValidation.pagination, async 
 
     // Count total user listings
     const countResult = await pool.query(
-      'SELECT COUNT(*) FROM produce_listings WHERE farmer_id = $1',
+      'SELECT COUNT(*) FROM produce_listings WHERE user_id = $1',
       [userId]
     );
     const total = parseInt(countResult.rows[0].count);
@@ -215,7 +218,7 @@ router.get('/my-listings', authMiddleware, ...queryValidation.pagination, async 
     // Get user listings
     const query = `
       SELECT * FROM produce_listings 
-      WHERE farmer_id = $1 
+      WHERE user_id = $1 
       ORDER BY listing_date DESC 
       LIMIT $2 OFFSET $3
     `;
@@ -270,7 +273,7 @@ router.post('/listings',
 
       const query = `
         INSERT INTO produce_listings (
-          farmer_id, title, description, category, quantity, unit, 
+          user_id, title, description, category, quantity, unit, 
           price_per_unit, location, harvest_date, image_url
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING *
@@ -322,7 +325,7 @@ router.put('/listings/:id',
 
       // Check if listing exists and belongs to user
       const existingListing = await pool.query(
-        'SELECT * FROM produce_listings WHERE id = $1 AND farmer_id = $2',
+        'SELECT * FROM produce_listings WHERE id = $1 AND user_id = $2',
         [listingId, userId]
       );
 
@@ -413,7 +416,7 @@ router.delete('/listings/:id', authMiddleware, async (req: AuthRequest, res: Res
     }
 
     const result = await pool.query(
-      'DELETE FROM produce_listings WHERE id = $1 AND farmer_id = $2 RETURNING *',
+      'DELETE FROM produce_listings WHERE id = $1 AND user_id = $2 RETURNING *',
       [listingId, userId]
     );
 

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import './Inbox.css'; // This CSS file will be created in the next step
+import '../styles/Inbox.css';
 
 const Inbox = () => {
   const { isAuthenticated, user } = useAuth();

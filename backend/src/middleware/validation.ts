@@ -47,10 +47,10 @@ export const userValidation = {
   ] as ValidationChain[],
 
   login: [
-    body('email')
-      .isEmail()
-      .withMessage('Please provide a valid email address')
-      .normalizeEmail(),
+    body('identifier')
+      .notEmpty()
+      .withMessage('Email or username is required')
+      .trim(),
     
     body('password')
       .notEmpty()

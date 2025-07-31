@@ -1,6 +1,8 @@
 // frontend/src/components/Register.js
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import apiService from '../services/api';
 import '../styles/Forms.css';
 
 const Register = () => {
@@ -9,37 +11,33 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate(); // Initialize navigate
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setMessage('');
     setError('');
+    setLoading(true);
 
     try {
-      const response = await fetch('/api/users/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, email, password }),
-      });
+      // Register user with TypeScript backend
+      const response = await apiService.register({ username, email, password });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage(data.message + ' You can now log in.');
-        setUsername('');
-        setEmail('');
-        setPassword('');
-        //Redirect to login page after successful registration
-        navigate('/login');
+      // If registration includes login (access token), log them in
+      if (response.accessToken) {
+        await login({ username, password });
+        setMessage('Registration successful! Welcome!');
+        navigate('/');
       } else {
-        setError(data.error || 'Registration failed');
+        setMessage('Registration successful! You can now log in.');
+        navigate('/login');
       }
     } catch (err) {
-      setError('Error connecting to the server');
-      console.error('Registration error:', err);
+      setError(err.message || 'Registration failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -79,8 +77,8 @@ const Register = () => {
             required
           />
         </div>
-        <button type="submit" className="form-button">
-          Register
+        <button type="submit" className="form-button" disabled={loading}>
+          {loading ? 'Registering...' : 'Register'}
         </button>
       </form>
     </div>

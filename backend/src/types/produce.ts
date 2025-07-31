@@ -1,7 +1,7 @@
 // src/types/produce.ts - Produce listing related types
 export interface ProduceListing {
   id: number;
-  farmer_id: number;
+  user_id: number;
   title: string;
   description: string;
   category: string;

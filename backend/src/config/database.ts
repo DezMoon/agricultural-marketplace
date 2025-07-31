@@ -30,10 +30,10 @@ const dbConfig: DatabaseConfig = {
   database: process.env.DB_NAME!,
   user: process.env.DB_USER!,
   password: process.env.DB_PASSWORD!,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 2000, // Return an error after 2 seconds if connection could not be established
+  ssl: { rejectUnauthorized: false }, // Always use SSL for RDS connections
+  max: 10, // Maximum number of clients in the pool
+  idleTimeoutMillis: 60000, // Close idle clients after 60 seconds
+  connectionTimeoutMillis: 30000, // Return an error after 30 seconds if connection could not be established
 };
 
 // Create and export the pool

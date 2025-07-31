@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
-import { useAuth } from '../context/AuthContext'; // Import useAuth
-import './ProduceList.css';
-import defaultImage from '../assets/default-produce.jpg'; // Add this import
+import { useAuth } from '../context/AuthContext';
+import '../styles/ProduceList.css';
+import defaultImage from '../assets/default-produce.jpg';
 
 const socket = io('http://localhost:3000'); // Connect to your backend Socket.IO server
 
@@ -51,8 +51,8 @@ const ProduceList = () => {
       );
       if (response.ok) {
         const data = await response.json();
-        setListings(data.listings);
-        setTotalCount(data.total_count);
+        setListings(data.data || []);
+        setTotalCount(data.pagination?.total || 0);
       } else {
         setError('Failed to fetch produce listings.');
       }
@@ -196,9 +196,7 @@ const ProduceList = () => {
         </div>
       </div>
 
-      {listings.length === 0 ? (
-        <p>No listings found matching your criteria.</p>
-      ) : (
+      {listings && listings.length > 0 ? (
         <>
           <ul className="produce-list">
             {listings.map((listing) => (
@@ -242,6 +240,8 @@ const ProduceList = () => {
             </button>
           </div>
         </>
+      ) : (
+        <p>No listings found matching your criteria.</p>
       )}
     </div>
   );

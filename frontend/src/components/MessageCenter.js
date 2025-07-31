@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
-import './MessageCenter.css'; // Create this CSS file
+import '../styles/MessageCenter.css';
 
 const socket = io('http://localhost:3000'); // Connect to your backend Socket.IO server
 

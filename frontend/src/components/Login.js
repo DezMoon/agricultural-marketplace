@@ -1,43 +1,33 @@
 // frontend/src/components/Login.js
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { useAuth } from '../context/AuthContext'; // Import useAuth
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import '../styles/Forms.css';
 
 const Login = () => {
-  const [username, setUsername] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate(); // Initialize navigate
-  const { login } = useAuth(); // Get the login function from context
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setMessage('');
     setError('');
+    setLoading(true);
 
     try {
-      const response = await fetch('/api/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage(data.message);
-        login(data.token, username); // Call the login function from AuthContext
-        navigate('/'); // Redirect to produce listings on successful login
-      } else {
-        setError(data.error || 'Login failed');
-      }
+      // Use the new login method from AuthContext which uses apiService
+      await login({ identifier, password });
+      setMessage('Login successful!');
+      navigate('/'); // Redirect to produce listings on successful login
     } catch (err) {
-      setError('Error connecting to the server');
-      console.error('Login error:', err);
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -48,12 +38,13 @@ const Login = () => {
       {error && <p className="message-error">{error}</p>}
       <form onSubmit={handleLogin}>
         <div className="form-group">
-          <label htmlFor="username">Username:</label>
+          <label htmlFor="identifier">Email or Username:</label>
           <input
             type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            id="identifier"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            placeholder="Enter your email or username"
             required
           />
         </div>
@@ -67,8 +58,8 @@ const Login = () => {
             required
           />
         </div>
-        <button type="submit" className="form-button">
-          Login
+        <button type="submit" className="form-button" disabled={loading}>
+          {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
     </div>
