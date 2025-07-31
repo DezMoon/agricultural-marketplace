@@ -1,5 +1,10 @@
 // src/server.ts - TypeScript server entry point
+import dotenv from 'dotenv';
 import http from 'http';
+
+// Load environment variables first
+dotenv.config();
+
 import app from './app';
 
 const PORT = process.env.PORT || 3000;

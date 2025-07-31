@@ -13,14 +13,12 @@ import {
   LoginResponse, 
   RegisterResponse 
 } from '@/types/auth';
+import RefreshTokenModel from '@/models/refreshToken';
 
 const router: Router = express.Router();
 
 // Middleware to parse JSON request bodies
 router.use(express.json());
-
-// Import RefreshTokenModel (keeping as JS for now)
-const RefreshTokenModel = require('../models/refreshToken');
 
 // POST /api/users/register - Register a new user
 router.post('/register', generalLimiter, ...userValidation.register, async (req: Request, res: Response): Promise<void> => {
@@ -154,6 +152,12 @@ router.post('/refresh', authLimiter, async (req: Request, res: Response): Promis
         error: 'Refresh token not found or expired',
         code: 'REFRESH_TOKEN_NOT_FOUND'
       });
+      return;
+    }
+
+    // Check if we have user data from the JOIN
+    if (!tokenRecord.username || !tokenRecord.email) {
+      res.status(500).json({ error: 'Invalid token data' });
       return;
     }
 

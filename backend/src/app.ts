@@ -1,11 +1,12 @@
 // src/app.ts - Main application file with TypeScript
+import dotenv from 'dotenv';
+
+// Load environment variables first
+dotenv.config();
+
 import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import path from 'path';
-import dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
 
 // Import middleware
 import { securityHeaders, generalLimiter, corsOptions } from '@/middleware/security';
