@@ -1,8 +1,10 @@
 // backend/routes/produce.js
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
-const authMiddleware = require('../middleware/authMiddleware'); // Import the middleware
+const pool = require('../config/database');
+const { authMiddleware } = require('../middleware/authMiddleware'); // Import the middleware
+const { produceValidation, queryValidation } = require('../middleware/validation');
+const { listingLimiter, uploadLimiter } = require('../middleware/security');
 const multer = require('multer');
 const path = require('path');
 
@@ -12,7 +14,7 @@ router.use(express.json());
 // Multer storage config
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '../uploads'));
+    cb(null, path.join(__dirname, '../../uploads'));
   },
   filename: function (req, file, cb) {
     // Use Date.now() for unique file names

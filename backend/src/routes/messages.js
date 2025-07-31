@@ -1,8 +1,10 @@
 // backend/routes/messages.js
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
-const authMiddleware = require('../middleware/authMiddleware'); // For protecting message routes
+const pool = require('../config/database');
+const { authMiddleware } = require('../middleware/authMiddleware'); // For protecting message routes
+const { messageValidation } = require('../middleware/validation');
+const { messageLimiter } = require('../middleware/security');
 
 // Middleware to parse JSON request bodies
 router.use(express.json());
