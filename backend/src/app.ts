@@ -9,7 +9,11 @@ import cors from 'cors';
 import path from 'path';
 
 // Import middleware
-import { securityHeaders, generalLimiter, corsOptions } from '@/middleware/security';
+import {
+  securityHeaders,
+  generalLimiter,
+  corsOptions,
+} from '@/middleware/security';
 
 // Import routes
 import usersRoutes from '@/routes/users';
@@ -29,21 +33,31 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Serve uploaded files with CORS headers
-app.use('/uploads', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'http://localhost:3001');
-  res.header('Access-Control-Allow-Methods', 'GET');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-  next();
-}, express.static(path.join(__dirname, '../uploads')));
+app.use(
+  '/uploads',
+  (req, res, next) => {
+    res.header(
+      'Access-Control-Allow-Origin',
+      process.env.FRONTEND_URL || 'http://localhost:3001'
+    );
+    res.header('Access-Control-Allow-Methods', 'GET');
+    res.header(
+      'Access-Control-Allow-Headers',
+      'Origin, X-Requested-With, Content-Type, Accept'
+    );
+    next();
+  },
+  express.static(path.join(__dirname, '../../uploads'))
+);
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
-  res.json({ 
-    status: 'OK', 
+  res.json({
+    status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
-    typescript: true
+    typescript: true,
   });
 });
 
@@ -57,8 +71,8 @@ app.get('/api', (req: Request, res: Response) => {
     endpoints: {
       users: '/api/users',
       produce: '/api/produce',
-      messages: '/api/messages'
-    }
+      messages: '/api/messages',
+    },
   });
 });
 
@@ -70,9 +84,9 @@ app.use('/api/messages', messagesRoutes);
 // Error handling middleware
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error('Error:', err);
-  res.status(500).json({ 
+  res.status(500).json({
     error: 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { details: err.message })
+    ...(process.env.NODE_ENV === 'development' && { details: err.message }),
   });
 });
 

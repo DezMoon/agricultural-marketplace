@@ -1,8 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, FormEvent, ChangeEvent } from 'react';
 import './ProduceForm.css';
 
-const ProduceForm = () => {
-  const [formData, setFormData] = useState({
+interface FormData {
+  farmer_name: string;
+  produce_type: string;
+  quantity: string;
+  unit: string;
+  price_per_unit: string;
+  location: string;
+  description: string;
+}
+
+type SubmissionStatus = null | 'submitting' | 'success' | 'error';
+
+const ProduceForm: React.FC = () => {
+  const [formData, setFormData] = useState<FormData>({
     farmer_name: '',
     produce_type: '',
     quantity: '',
@@ -11,14 +23,17 @@ const ProduceForm = () => {
     location: '',
     description: '',
   });
-  const [submissionStatus, setSubmissionStatus] = useState(null); // To display success/error messages
+  const [submissionStatus, setSubmissionStatus] =
+    useState<SubmissionStatus>(null); // To display success/error messages
 
-  const handleChange = (e) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ): void => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setSubmissionStatus('submitting'); // Indicate that the form is being submitted
 

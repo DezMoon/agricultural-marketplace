@@ -1,5 +1,13 @@
 // src/services/api.ts - Centralized API service for TypeScript backend
-import { User, LoginData, RegisterData, ProduceListing, Message } from '../types';
+import {
+  User,
+  LoginData,
+  RegisterData,
+  ProduceListing,
+  Message,
+} from '../types';
+
+// Ensure TypeScript knows about DOM types (RequestInit)
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
@@ -34,7 +42,10 @@ class ApiService {
   }
 
   // Helper method for making requests with improved error handling
-  async request<T = any>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+  async request<T = any>(
+    endpoint: string,
+    options: RequestOptions = {}
+  ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const config: RequestOptions = {
       headers: {
@@ -106,10 +117,13 @@ class ApiService {
   }
 
   async register(userData: RegisterData): Promise<RegisterResponse> {
-    const response = await this.request<RegisterResponse>('/api/users/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
-    });
+    const response = await this.request<RegisterResponse>(
+      '/api/users/register',
+      {
+        method: 'POST',
+        body: JSON.stringify(userData),
+      }
+    );
 
     // Store both access and refresh tokens
     if (response.accessToken) {

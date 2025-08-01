@@ -1,12 +1,6 @@
 // frontend/src/App.tsx
 import React, { useState, useEffect } from 'react';
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Link,
-  useNavigate,
-} from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import io from 'socket.io-client';
 import ProduceList from './components/ProduceList';
 import Register from './components/Register';
@@ -17,7 +11,7 @@ import EditListingForm from './components/EditListingForm';
 import MessageCenter from './components/MessageCenter';
 import Inbox from './components/Inbox';
 import ListingDetails from './components/ListingDetails';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { useAuthStore } from './store/authStore';
 import DarkModeToggle from './components/DarkModeToggle';
 import { ProtectedRouteProps } from './types';
 import './App.css';
@@ -26,44 +20,29 @@ const socket = io(process.env.REACT_APP_API_URL || 'http://localhost:3000');
 
 // Component for the navigation links, now aware of auth state
 const AuthNavLinks: React.FC = () => {
-  const { user, logout, isAuthenticated } = useAuth();
-  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const { user, logout, isAuthenticated, unreadCount } = useAuthStore();
 
-  // Fetch unread count on mount and when user changes
   useEffect(() => {
     if (!isAuthenticated || !user) return;
 
-    const fetchUnread = async (): Promise<void> => {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-      
-      try {
-        const res = await fetch(
-          'http://localhost:3000/api/messages/unread-count',
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (res.ok) {
-          const data = await res.json();
-          setUnreadCount(data.count || 0);
-        }
-      } catch (error) {
-        // console.error('Failed to fetch unread count:', error);
-      }
-    };
-
-    fetchUnread();
+    // Join socket room for real-time messaging
+    socket.emit('joinRoom', user.id);
 
     // Listen for new messages on socket
     const handleNewMessage = (): void => {
-      fetchUnread(); // Refetch count when new message arrives
+      // The auth store will handle updating unread counts
+    };
+
+    const handleRefreshUnread = (): void => {
+      // The auth store will handle updating unread counts
     };
 
     socket.on('newMessage', handleNewMessage);
+    socket.on('refreshUnread', handleRefreshUnread);
 
     return () => {
       socket.off('newMessage', handleNewMessage);
+      socket.off('refreshUnread', handleRefreshUnread);
     };
   }, [isAuthenticated, user]);
 
@@ -122,28 +101,37 @@ const AuthNavLinks: React.FC = () => {
 
 // Simple Protected Route Component
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      navigate('/login', { replace: true });
-    }
-  }, [isAuthenticated, loading, navigate]);
+  const { isAuthenticated, loading } = useAuthStore();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="loading">Loading...</div>;
   }
 
-  return isAuthenticated ? <>{children}</> : null;
+  if (!isAuthenticated) {
+    return (
+      <div className="auth-required">
+        <h2>Authentication Required</h2>
+        <p>
+          Please <Link to="/login">login</Link> to access this page.
+        </p>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
 };
 
 const App: React.FC = () => {
-  // Dark mode state and effect
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     // Read from localStorage or default to false
     return localStorage.getItem('darkMode') === 'true';
   });
+  const { refreshAuth, loading } = useAuthStore();
+
+  // Initialize authentication on app startup
+  useEffect(() => {
+    refreshAuth();
+  }, [refreshAuth]);
 
   useEffect(() => {
     // Add/remove class on body
@@ -158,83 +146,86 @@ const App: React.FC = () => {
 
   const toggleDarkMode = (): void => setDarkMode((prev) => !prev);
 
+  if (loading) {
+    return (
+      <div className="app-loading">
+        <div className="loading-spinner">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <Router>
-      <AuthProvider>
-        <div className="App">
-          <nav
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'flex-end',
-              position: 'relative',
-            }}
-          >
-            {/* Toggle at top right */}
-            <DarkModeToggle
-              darkMode={darkMode}
-              toggleDarkMode={toggleDarkMode}
-            />
-            {/* Navigation links (centered) */}
-            <div style={{ flex: 1 }}>
-              <AuthNavLinks />
-            </div>
-          </nav>
-
-          <div className="produce-listings-container">
-            <Routes>
-              <Route path="/" element={<ProduceList />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/create-listing"
-                element={
-                  <ProtectedRoute>
-                    <CreateListingForm />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/my-listings"
-                element={
-                  <ProtectedRoute>
-                    <MyListings />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/edit-listing/:id"
-                element={
-                  <ProtectedRoute>
-                    <EditListingForm />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/messages/:listingId/:otherUserId"
-                element={
-                  <ProtectedRoute>
-                    <MessageCenter />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/inbox"
-                element={
-                  <ProtectedRoute>
-                    <Inbox />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/listing/:id" element={<ListingDetails />} />
-            </Routes>
+      <div className="App">
+        <nav
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            position: 'relative',
+          }}
+        >
+          {/* Toggle at top right */}
+          <DarkModeToggle darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+          {/* Navigation links (centered) */}
+          <div style={{ flex: 1 }}>
+            <AuthNavLinks />
           </div>
+        </nav>
 
-          <footer>
-            <p>&copy; 2025 Agricultural Marketplace</p>
-          </footer>
+        <div className="produce-listings-container">
+          <Routes>
+            <Route path="/" element={<ProduceList />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route
+              path="/create-listing"
+              element={
+                <ProtectedRoute>
+                  <CreateListingForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/my-listings"
+              element={
+                <ProtectedRoute>
+                  <MyListings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/edit-listing/:id"
+              element={
+                <ProtectedRoute>
+                  <EditListingForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/messages/:listingId/:otherUserId"
+              element={
+                <ProtectedRoute>
+                  <MessageCenter />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inbox"
+              element={
+                <ProtectedRoute>
+                  <Inbox />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/listing/:id" element={<ListingDetails />} />
+          </Routes>
         </div>
-      </AuthProvider>
+
+        <footer>
+          <p>&copy; 2025 Agricultural Marketplace</p>
+        </footer>
+      </div>
     </Router>
   );
 };

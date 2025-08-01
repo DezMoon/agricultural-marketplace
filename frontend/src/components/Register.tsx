@@ -1,43 +1,31 @@
-// frontend/src/components/Register.js
-import React, { useState } from 'react';
+// frontend/src/components/Register.tsx
+import React, { useState, FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import apiService from '../services/api';
+import { useAuthStore } from '../store/authStore';
 import '../styles/Forms.css';
 
-const Register = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+const Register: React.FC = () => {
+  const [username, setUsername] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [message, setMessage] = useState<string>('');
   const navigate = useNavigate();
-  const { login } = useAuth();
 
-  const handleRegister = async (e) => {
+  const { register, loading, error, clearError } = useAuthStore();
+
+  const handleRegister = async (
+    e: FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
     setMessage('');
-    setError('');
-    setLoading(true);
+    clearError();
 
     try {
-      // Register user with TypeScript backend
-      const response = await apiService.register({ username, email, password });
-
-      // If registration includes login (access token), log them in
-      if (response.accessToken) {
-        await login({ username, password });
-        setMessage('Registration successful! Welcome!');
-        navigate('/');
-      } else {
-        setMessage('Registration successful! You can now log in.');
-        navigate('/login');
-      }
+      await register({ username, email, password });
+      setMessage('Registration successful! Welcome!');
+      navigate('/');
     } catch (err) {
-      setError(err.message || 'Registration failed');
-    } finally {
-      setLoading(false);
+      // Error is already handled by the store
     }
   };
 

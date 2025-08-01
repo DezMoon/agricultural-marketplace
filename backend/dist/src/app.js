@@ -31,7 +31,7 @@ app.use('/uploads', (req, res, next) => {
     res.header('Access-Control-Allow-Methods', 'GET');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
     next();
-}, express_1.default.static(path_1.default.join(__dirname, '../uploads')));
+}, express_1.default.static(path_1.default.join(__dirname, '../../uploads')));
 // Health check endpoint
 app.get('/health', (req, res) => {
     res.json({

@@ -31,16 +31,23 @@ export interface ProduceListing {
   image_url?: string;
   farmer_username: string;
   farmer_email: string;
+  created_at?: string;
+  updated_at?: string;
 }
+
+// Alias for consistency with backend
+export type Produce = ProduceListing;
 
 export interface Message {
   id: number;
   sender_id: number;
-  receiver_id: number;
-  listing_id: number;
-  message: string;
-  sent_at: string;
-  is_read: boolean;
+  recipient_id: number;
+  produce_id?: number;
+  content: string;
+  read_at: string | null;
+  created_at: string;
+  updated_at: string;
+  conversation_id?: string;
 }
 
 export interface ApiResponse<T> {

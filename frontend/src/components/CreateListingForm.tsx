@@ -1,28 +1,30 @@
-// frontend/src/components/CreateListingForm.js
-import React, { useState } from 'react';
+// frontend/src/components/CreateListingForm.tsx
+import React, { useState, FormEvent, ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // To get the token for authenticated requests
+import { useAuthStore } from '../store/authStore'; // To get the token for authenticated requests
 import '../styles/Forms.css'; // Reuse existing form styles
 
-const CreateListingForm = () => {
-  const { user } = useAuth(); // Get user object from context (contains token implicitly for requests)
+const CreateListingForm: React.FC = () => {
+  const { user } = useAuthStore(); // Get user object from context (contains token implicitly for requests)
   const navigate = useNavigate();
 
-  const [produceType, setProduceType] = useState('');
-  const [quantity, setQuantity] = useState('');
-  const [unit, setUnit] = useState('');
-  const [pricePerUnit, setPricePerUnit] = useState('');
-  const [location, setLocation] = useState('');
-  const [description, setDescription] = useState('');
-  const [image, setImage] = useState(null);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
+  const [produceType, setProduceType] = useState<string>('');
+  const [quantity, setQuantity] = useState<string>('');
+  const [unit, setUnit] = useState<string>('');
+  const [pricePerUnit, setPricePerUnit] = useState<string>('');
+  const [location, setLocation] = useState<string>('');
+  const [description, setDescription] = useState<string>('');
+  const [image, setImage] = useState<File | null>(null);
+  const [error, setError] = useState<string>('');
+  const [message, setMessage] = useState<string>('');
 
-  const handleImageChange = (e) => {
-    setImage(e.target.files[0]);
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>): void => {
+    if (e.target.files && e.target.files[0]) {
+      setImage(e.target.files[0]);
+    }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault();
     setError('');
     setMessage('');
@@ -70,7 +72,9 @@ const CreateListingForm = () => {
         navigate('/my-listings'); // Go to user's listings
       }, 2000);
     } catch (err) {
-      setError(err.message);
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to create listing';
+      setError(errorMessage);
     }
   };
 
@@ -79,15 +83,15 @@ const CreateListingForm = () => {
       <h2>Create New Produce Listing</h2>
       {message && <p className="message-success">{message}</p>}
       {error && <p className="message-error">{error}</p>}
-      <form onSubmit={handleSubmit} encType="multipart/form-data">
+      <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="produceType">Produce Type:</label>
+          <label htmlFor="produce-type">Produce Type:</label>
           <input
             type="text"
-            id="produceType"
+            id="produce-type"
             value={produceType}
             onChange={(e) => setProduceType(e.target.value)}
-            placeholder="e.g., Maize, Tomatoes"
+            placeholder="e.g., Maize, Tomatoes, Cabbage"
             required
           />
         </div>
@@ -98,9 +102,8 @@ const CreateListingForm = () => {
             id="quantity"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
-            placeholder="e.g., 500"
+            min="1"
             required
-            min="0"
           />
         </div>
         <div className="form-group">
@@ -115,16 +118,15 @@ const CreateListingForm = () => {
           />
         </div>
         <div className="form-group">
-          <label htmlFor="pricePerUnit">Price Per Unit (ZMW):</label>
+          <label htmlFor="price-per-unit">Price per Unit (K):</label>
           <input
             type="number"
-            id="pricePerUnit"
+            id="price-per-unit"
             value={pricePerUnit}
             onChange={(e) => setPricePerUnit(e.target.value)}
-            placeholder="e.g., 250 (for per kg/bag)"
-            required
             min="0"
             step="0.01"
+            required
           />
         </div>
         <div className="form-group">
@@ -134,27 +136,27 @@ const CreateListingForm = () => {
             id="location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="e.g., Lusaka, Chongwe"
+            placeholder="e.g., Lusaka, Ndola, Kitwe"
             required
           />
         </div>
         <div className="form-group">
-          <label htmlFor="description">Description (Optional):</label>
+          <label htmlFor="description">Description:</label>
           <textarea
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="e.g., Freshly harvested, organic, 2024 season"
-            rows="4"
-          ></textarea>
+            placeholder="Optional: Additional details about your produce"
+            rows={4}
+          />
         </div>
         <div className="form-group">
-          <label htmlFor="image">Image (optional):</label>
+          <label htmlFor="image">Upload Image:</label>
           <input
             type="file"
             id="image"
-            accept="image/*"
             onChange={handleImageChange}
+            accept="image/*"
           />
         </div>
         <button type="submit" className="form-button">

@@ -1,6 +1,14 @@
 import React from 'react';
 
-const DarkModeToggle = ({ darkMode, toggleDarkMode }) => (
+interface DarkModeToggleProps {
+  darkMode: boolean;
+  toggleDarkMode: () => void;
+}
+
+const DarkModeToggle: React.FC<DarkModeToggleProps> = ({
+  darkMode,
+  toggleDarkMode,
+}) => (
   <button
     onClick={toggleDarkMode}
     style={{
