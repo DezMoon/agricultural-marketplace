@@ -7,12 +7,12 @@ import {
   Message,
 } from '../types';
 
-// Ensure TypeScript knows about DOM types (RequestInit)
-
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3000';
 
-interface RequestOptions extends Omit<RequestInit, 'headers'> {
+interface ApiRequestOptions {
+  method?: string;
   headers?: Record<string, string>;
+  body?: string | FormData;
 }
 
 interface LoginResponse {
@@ -44,10 +44,10 @@ class ApiService {
   // Helper method for making requests with improved error handling
   async request<T = any>(
     endpoint: string,
-    options: RequestOptions = {}
+    options: ApiRequestOptions = {}
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    const config: RequestOptions = {
+    const config: ApiRequestOptions = {
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
@@ -171,7 +171,7 @@ class ApiService {
       }
     } catch (error) {
       // Continue with logout even if API call fails
-      console.error('Logout API call failed:', error);
+      // Error is handled silently for logout
     } finally {
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');

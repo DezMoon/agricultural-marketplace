@@ -29,6 +29,7 @@ interface AuthState {
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
   clearError: () => void;
+  clearAllAuth: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -57,6 +58,19 @@ export const useAuthStore = create<AuthState>()(
       setUnreadCount: (unreadCount) => set({ unreadCount }),
 
       clearError: () => set({ error: null }),
+
+      clearAllAuth: () => {
+        // Clear tokens and reset state completely
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        set({
+          user: null,
+          isAuthenticated: false,
+          loading: false,
+          error: null,
+          unreadCount: 0,
+        });
+      },
 
       login: async (credentials) => {
         set({ loading: true, error: null });
@@ -150,7 +164,13 @@ export const useAuthStore = create<AuthState>()(
       refreshAuth: async () => {
         const token = localStorage.getItem('token');
         if (!token) {
-          set({ loading: false });
+          set({
+            user: null,
+            isAuthenticated: false,
+            loading: false,
+            error: null,
+            unreadCount: 0,
+          });
           return;
         }
 

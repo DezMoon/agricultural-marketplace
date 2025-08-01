@@ -388,15 +388,30 @@ export const useProduceStore = create<ProduceState>()(
     },
 
     fetchMyListings: async () => {
+      // Check if user is authenticated before making API call
+      const token = localStorage.getItem('token');
+      if (!token) {
+        set((draft) => {
+          draft.myListings = [];
+          draft.loading = false;
+          draft.error = null;
+        });
+        return;
+      }
+
       set((draft) => {
         draft.loading = true;
         draft.error = null;
       });
 
       try {
-        const listings = await apiService.getMyListings();
+        const response = await apiService.getMyListings();
         set((draft) => {
-          draft.myListings = listings;
+          // Extract listings from backend response structure
+          // Backend returns { success: true, data: listings, pagination: {...} }
+          const listings = (response as any)?.data || response;
+          // Ensure we always store an array
+          draft.myListings = Array.isArray(listings) ? listings : [];
           draft.loading = false;
         });
       } catch (error) {

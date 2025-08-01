@@ -20,7 +20,8 @@ const socket = io(process.env.REACT_APP_API_URL || 'http://localhost:3000');
 
 // Component for the navigation links, now aware of auth state
 const AuthNavLinks: React.FC = () => {
-  const { user, logout, isAuthenticated, unreadCount } = useAuthStore();
+  const { user, logout, isAuthenticated, unreadCount, clearAllAuth } =
+    useAuthStore();
 
   useEffect(() => {
     if (!isAuthenticated || !user) return;
@@ -68,7 +69,23 @@ const AuthNavLinks: React.FC = () => {
             </Link>
           </li>
           <li>
-            <span>Welcome, {user?.username}!</span>
+            <span>Welcome, {user?.username || 'User'}!</span>
+          </li>
+          <li>
+            <button
+              onClick={clearAllAuth}
+              style={{
+                background: 'red',
+                color: 'white',
+                border: 'none',
+                padding: '4px 8px',
+                cursor: 'pointer',
+                fontSize: '12px',
+              }}
+              title="Clear auth tokens and reload"
+            >
+              Clear Auth
+            </button>
           </li>
           <li>
             <button
