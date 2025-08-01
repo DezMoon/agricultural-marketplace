@@ -10,12 +10,14 @@ const EditListingForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>(); // Get the listing ID from the URL
 
-  const [produceType, setProduceType] = useState<string>('');
+  const [title, setTitle] = useState<string>('');
+  const [category, setCategory] = useState<string>('');
   const [quantity, setQuantity] = useState<string>('');
   const [unit, setUnit] = useState<string>('');
   const [pricePerUnit, setPricePerUnit] = useState<string>('');
   const [location, setLocation] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+  const [harvestDate, setHarvestDate] = useState<string>('');
   const [availabilityStatus, setAvailabilityStatus] =
     useState<string>('available');
   const [loading, setLoading] = useState<boolean>(true);
@@ -53,12 +55,16 @@ const EditListingForm: React.FC = () => {
           }
 
           // Populate form with existing data
-          setProduceType(data.produce_type);
+          setTitle(data.title);
+          setCategory(data.category);
           setQuantity(data.quantity.toString());
           setUnit(data.unit);
           setPricePerUnit(data.price_per_unit.toString());
           setLocation(data.location);
           setDescription(data.description);
+          setHarvestDate(
+            (data.harvest_date ? data.harvest_date.split('T')[0] : '') || ''
+          );
           setAvailabilityStatus(data.availability_status || 'available');
         } else {
           setError('Failed to fetch listing details.');
@@ -90,12 +96,14 @@ const EditListingForm: React.FC = () => {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            produce_type: produceType,
+            title: title,
+            category: category,
             quantity: parseInt(quantity),
             unit: unit,
             price_per_unit: parseFloat(pricePerUnit),
             location: location,
             description: description,
+            harvest_date: harvestDate,
             availability_status: availabilityStatus,
           }),
         }
@@ -137,14 +145,32 @@ const EditListingForm: React.FC = () => {
 
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="produce-type">Produce Type:</label>
+          <label htmlFor="title">Title:</label>
           <input
             type="text"
-            id="produce-type"
-            value={produceType}
-            onChange={(e) => setProduceType(e.target.value)}
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g., Fresh Maize, Organic Tomatoes"
             required
           />
+        </div>
+        <div className="form-group">
+          <label htmlFor="category">Category:</label>
+          <select
+            id="category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            required
+          >
+            <option value="">Select Category</option>
+            <option value="vegetables">Vegetables</option>
+            <option value="fruits">Fruits</option>
+            <option value="grains">Grains</option>
+            <option value="dairy">Dairy</option>
+            <option value="meat">Meat</option>
+            <option value="other">Other</option>
+          </select>
         </div>
 
         <div className="form-group">
@@ -161,13 +187,20 @@ const EditListingForm: React.FC = () => {
 
         <div className="form-group">
           <label htmlFor="unit">Unit:</label>
-          <input
-            type="text"
+          <select
             id="unit"
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
             required
-          />
+          >
+            <option value="">Select Unit</option>
+            <option value="kg">Kilograms (kg)</option>
+            <option value="lbs">Pounds (lbs)</option>
+            <option value="tons">Tons</option>
+            <option value="pieces">Pieces</option>
+            <option value="liters">Liters</option>
+            <option value="gallons">Gallons</option>
+          </select>
         </div>
 
         <div className="form-group">
@@ -200,7 +233,20 @@ const EditListingForm: React.FC = () => {
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            placeholder="Additional details about your produce"
             rows={4}
+            required
+          />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="harvest-date">Harvest Date:</label>
+          <input
+            type="date"
+            id="harvest-date"
+            value={harvestDate}
+            onChange={(e) => setHarvestDate(e.target.value)}
+            required
           />
         </div>
 

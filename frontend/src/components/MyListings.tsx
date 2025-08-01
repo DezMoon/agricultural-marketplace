@@ -118,7 +118,7 @@ const MyListings: React.FC = () => {
                           ? listing.image_url
                           : `http://localhost:3000/uploads/${listing.image_url}`
                       }
-                      alt={listing.produce_type}
+                      alt={listing.title}
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.src = '/src/assets/default-produce.jpg';
@@ -130,7 +130,7 @@ const MyListings: React.FC = () => {
                 </div>
 
                 <div className="listing-content">
-                  <h3>{listing.produce_type}</h3>
+                  <h3>{listing.title}</h3>
                   <p className="listing-price">
                     ${listing.price_per_unit}/{listing.unit}
                   </p>
@@ -140,7 +140,7 @@ const MyListings: React.FC = () => {
                   <p className="listing-location">{listing.location}</p>
                   <p className="listing-description">{listing.description}</p>
                   <p className="listing-category">
-                    Category: {listing.produce_type}
+                    Category: {listing.category}
                   </p>
 
                   <div className="listing-actions">

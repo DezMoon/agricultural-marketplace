@@ -21,13 +21,14 @@ CREATE TABLE refresh_tokens (
 -- Produce Listings table
 CREATE TABLE produce_listings (
     id SERIAL PRIMARY KEY,
-    farmer_name VARCHAR(100) NOT NULL,
-    produce_type VARCHAR(100) NOT NULL,
+    title VARCHAR(100) NOT NULL,
+    category VARCHAR(50) NOT NULL CHECK (category IN ('vegetables', 'fruits', 'grains', 'dairy', 'meat', 'other')),
     quantity NUMERIC NOT NULL,
-    unit VARCHAR(20) NOT NULL,
+    unit VARCHAR(20) NOT NULL CHECK (unit IN ('kg', 'lbs', 'tons', 'pieces', 'liters', 'gallons')),
     price_per_unit NUMERIC(10,2) NOT NULL,
     location VARCHAR(100) NOT NULL,
-    description TEXT,
+    description TEXT NOT NULL,
+    harvest_date DATE NOT NULL,
     image_url VARCHAR(255),
     listing_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     availability_status VARCHAR(20) DEFAULT 'available',

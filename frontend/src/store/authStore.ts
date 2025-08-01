@@ -189,9 +189,9 @@ export const useAuthStore = create<AuthState>()(
           // Only fetch unread message count if user authentication was successful
           try {
             const unreadResponse = await apiService.request(
-              '/api/messages/unread-count'
+              '/api/messages/unread/count'
             );
-            set({ unreadCount: unreadResponse.unreadCount || 0 });
+            set({ unreadCount: unreadResponse.data?.count || 0 });
           } catch (error) {
             // Non-critical error, just log it
             //console.warn('Could not fetch unread count:', error);

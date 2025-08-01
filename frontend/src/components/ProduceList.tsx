@@ -50,7 +50,7 @@ const ProduceList: React.FC = () => {
       });
 
       if (produceTypeFilter) {
-        params.append('produce_type', produceTypeFilter);
+        params.append('category', produceTypeFilter);
       }
       if (locationFilter) {
         params.append('location', locationFilter);
@@ -195,7 +195,7 @@ const ProduceList: React.FC = () => {
           <span>Sort By:</span>
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
             <option value="listing_date">Date</option>
-            <option value="produce_type">Produce Type</option>
+            <option value="category">Category</option>
             <option value="quantity">Quantity</option>
             <option value="price_per_unit">Price</option>
             <option value="location">Location</option>
@@ -227,9 +227,9 @@ const ProduceList: React.FC = () => {
                       ? `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}${listing.image_url}`
                       : defaultImage
                   }
-                  alt={listing.produce_type}
+                  alt={listing.title}
                 />
-                <h3>{listing.produce_type}</h3>
+                <h3>{listing.title}</h3>
                 <p>Farmer: {listing.farmer_username}</p>
                 <p>{listing.description}</p>
                 <h4>

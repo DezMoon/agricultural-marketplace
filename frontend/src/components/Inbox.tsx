@@ -9,7 +9,7 @@ interface Conversation {
   other_user_id: number;
   other_username?: string;
   other_email?: string;
-  produce_type: string;
+  title: string;
   message_text: string;
   timestamp: string;
   sender_id: number;
@@ -101,30 +101,34 @@ const Inbox: React.FC = () => {
                   conv.produce_id,
                   conv.other_user_id,
                   conv.other_username || conv.other_email || 'Unknown',
-                  conv.produce_type
+                  conv.title
                 )
               }
             >
-              <div className="conversation-header">
-                <h3>Conversation about: {conv.produce_type}</h3>
-                <span className="other-party">
-                  With: {conv.other_username || conv.other_email}
+              <div className="conversation-info">
+                <div className="conversation-header">
+                  <h3>Conversation about: {conv.title}</h3>
+                  <span className="other-party">
+                    With: {conv.other_username || conv.other_email}
+                  </span>
+                  {conv.unread_count > 0 && (
+                    <span className="unread-count">
+                      {conv.unread_count} New
+                    </span>
+                  )}
+                </div>
+                <p className="last-message">
+                  {conv.sender_id === user?.id
+                    ? 'You: '
+                    : `${conv.other_username || conv.other_email}: `}
+                  {conv.message_text.length > 50
+                    ? conv.message_text.substring(0, 50) + '...'
+                    : conv.message_text}
+                </p>
+                <span className="message-timestamp">
+                  {new Date(conv.timestamp).toLocaleString()}
                 </span>
-                {conv.unread_count > 0 && (
-                  <span className="unread-count">{conv.unread_count} New</span>
-                )}
               </div>
-              <p className="last-message">
-                {conv.sender_id === user?.id
-                  ? 'You: '
-                  : `${conv.other_username || conv.other_email}: `}
-                {conv.message_text.length > 50
-                  ? conv.message_text.substring(0, 50) + '...'
-                  : conv.message_text}
-              </p>
-              <span className="message-timestamp">
-                {new Date(conv.timestamp).toLocaleString()}
-              </span>
             </li>
           ))}
         </ul>

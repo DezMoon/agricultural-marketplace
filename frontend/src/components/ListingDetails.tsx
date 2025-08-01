@@ -48,7 +48,7 @@ const ListingDetails: React.FC = () => {
     navigate(`/messages/${listing.id}/${listing.user_id}`, {
       state: {
         farmerUsername: listing.farmer_username,
-        produceType: listing.produce_type,
+        produceType: listing.title,
       },
     });
   };
@@ -81,7 +81,7 @@ const ListingDetails: React.FC = () => {
                 ? `${API_URL}${listing.image_url}`
                 : defaultImage
             }
-            alt={listing.produce_type}
+            alt={listing.title}
             style={{
               width: '100%',
               borderRadius: 8,
@@ -101,7 +101,7 @@ const ListingDetails: React.FC = () => {
             border: 'none', // Remove any inner border
           }}
         >
-          <h2 style={{ marginTop: 0 }}>{listing.produce_type}</h2>
+          <h2 style={{ marginTop: 0 }}>{listing.title}</h2>
           <p>
             <strong>Description:</strong> {listing.description}
           </p>
@@ -160,7 +160,7 @@ const ListingDetails: React.FC = () => {
           }}
         >
           <p style={{ fontSize: 18, marginBottom: 16 }}>
-            Want to get <strong>{listing.produce_type}</strong>?{' '}
+            Want to get <strong>{listing.title}</strong>?{' '}
             <span style={{ color: '#d32f2f' }}>Login</span> or{' '}
             <span style={{ color: '#1976d2' }}>Register</span> to contact{' '}
             <strong>{listing.farmer_username}</strong>.

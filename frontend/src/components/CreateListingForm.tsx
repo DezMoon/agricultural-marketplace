@@ -8,12 +8,14 @@ const CreateListingForm: React.FC = () => {
   const { user } = useAuthStore(); // Get user object from context (contains token implicitly for requests)
   const navigate = useNavigate();
 
-  const [produceType, setProduceType] = useState<string>('');
+  const [title, setTitle] = useState<string>('');
+  const [category, setCategory] = useState<string>('');
   const [quantity, setQuantity] = useState<string>('');
   const [unit, setUnit] = useState<string>('');
   const [pricePerUnit, setPricePerUnit] = useState<string>('');
   const [location, setLocation] = useState<string>('');
   const [description, setDescription] = useState<string>('');
+  const [harvestDate, setHarvestDate] = useState<string>('');
   const [image, setImage] = useState<File | null>(null);
   const [error, setError] = useState<string>('');
   const [message, setMessage] = useState<string>('');
@@ -30,13 +32,14 @@ const CreateListingForm: React.FC = () => {
     setMessage('');
 
     const formData = new FormData();
-    formData.append('produce_type', produceType);
+    formData.append('title', title);
+    formData.append('category', category);
     formData.append('quantity', quantity);
     formData.append('unit', unit);
     formData.append('price_per_unit', pricePerUnit);
     formData.append('location', location);
     formData.append('description', description);
-    formData.append('farmer_name', user?.username || user?.email || '');
+    formData.append('harvest_date', harvestDate);
     if (image) {
       formData.append('image', image);
     }
@@ -60,12 +63,14 @@ const CreateListingForm: React.FC = () => {
 
       setMessage('Listing created successfully!');
       // Clear form
-      setProduceType('');
+      setTitle('');
+      setCategory('');
       setQuantity('');
       setUnit('');
       setPricePerUnit('');
       setLocation('');
       setDescription('');
+      setHarvestDate('');
       setImage(null);
       // Optionally redirect after a short delay
       setTimeout(() => {
@@ -85,15 +90,32 @@ const CreateListingForm: React.FC = () => {
       {error && <p className="message-error">{error}</p>}
       <form onSubmit={handleSubmit}>
         <div className="form-group">
-          <label htmlFor="produce-type">Produce Type:</label>
+          <label htmlFor="title">Title:</label>
           <input
             type="text"
-            id="produce-type"
-            value={produceType}
-            onChange={(e) => setProduceType(e.target.value)}
-            placeholder="e.g., Maize, Tomatoes, Cabbage"
+            id="title"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g., Fresh Maize, Organic Tomatoes"
             required
           />
+        </div>
+        <div className="form-group">
+          <label htmlFor="category">Category:</label>
+          <select
+            id="category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            required
+          >
+            <option value="">Select Category</option>
+            <option value="vegetables">Vegetables</option>
+            <option value="fruits">Fruits</option>
+            <option value="grains">Grains</option>
+            <option value="dairy">Dairy</option>
+            <option value="meat">Meat</option>
+            <option value="other">Other</option>
+          </select>
         </div>
         <div className="form-group">
           <label htmlFor="quantity">Quantity:</label>
@@ -108,14 +130,20 @@ const CreateListingForm: React.FC = () => {
         </div>
         <div className="form-group">
           <label htmlFor="unit">Unit:</label>
-          <input
-            type="text"
+          <select
             id="unit"
             value={unit}
             onChange={(e) => setUnit(e.target.value)}
-            placeholder="e.g., kg, bags, crates"
             required
-          />
+          >
+            <option value="">Select Unit</option>
+            <option value="kg">Kilograms (kg)</option>
+            <option value="lbs">Pounds (lbs)</option>
+            <option value="tons">Tons</option>
+            <option value="pieces">Pieces</option>
+            <option value="liters">Liters</option>
+            <option value="gallons">Gallons</option>
+          </select>
         </div>
         <div className="form-group">
           <label htmlFor="price-per-unit">Price per Unit (K):</label>
@@ -146,8 +174,19 @@ const CreateListingForm: React.FC = () => {
             id="description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Optional: Additional details about your produce"
+            placeholder="Additional details about your produce"
             rows={4}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="harvest-date">Harvest Date:</label>
+          <input
+            type="date"
+            id="harvest-date"
+            value={harvestDate}
+            onChange={(e) => setHarvestDate(e.target.value)}
+            required
           />
         </div>
         <div className="form-group">

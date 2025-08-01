@@ -19,9 +19,10 @@ export interface AuthContextType {
 export interface ProduceListing {
   id: number;
   user_id: number;
-  produce_type: string;
+  title: string;
+  category: 'vegetables' | 'fruits' | 'grains' | 'dairy' | 'meat' | 'other';
   quantity: number;
-  unit: string;
+  unit: 'kg' | 'lbs' | 'tons' | 'pieces' | 'liters' | 'gallons';
   price_per_unit: number;
   description: string;
   location: string;
