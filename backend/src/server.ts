@@ -18,12 +18,13 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 const io = new SocketIOServer(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production' 
-      ? process.env.FRONTEND_URL 
-      : "http://localhost:3001",
-    methods: ["GET", "POST"],
-    credentials: true
-  }
+    origin:
+      process.env.NODE_ENV === 'production'
+        ? process.env.FRONTEND_URL
+        : 'http://localhost:3001',
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
 });
 
 // Make io accessible to the app
@@ -33,10 +34,16 @@ app.set('io', io);
 io.on('connection', (socket) => {
   console.log('🔌 User connected:', socket.id);
 
-  // Handle user joining their own room for private messages
+  // Handle user joining their own room for private messages (frontend uses 'joinRoom')
+  socket.on('joinRoom', (userId) => {
+    socket.join(`user_${userId}`);
+    console.log(`👤 User ${userId} joined their room (user_${userId})`);
+  });
+
+  // Also handle the previous version for compatibility
   socket.on('join_user_room', (userId) => {
     socket.join(`user_${userId}`);
-    console.log(`👤 User ${userId} joined their room`);
+    console.log(`👤 User ${userId} joined their room (user_${userId})`);
   });
 
   // Handle disconnection
@@ -50,11 +57,13 @@ async function startServer() {
   try {
     // Initialize database schema
     await initializeDatabase();
-    
+
     // Start HTTP server
     server.listen(PORT, () => {
       console.log(`🚀 TypeScript Server listening on port ${PORT}`);
-      console.log(`📊 Health check available at http://localhost:${PORT}/health`);
+      console.log(
+        `📊 Health check available at http://localhost:${PORT}/health`
+      );
       console.log(`🔧 Running in TypeScript mode with hot reload`);
       console.log(`🔌 Socket.IO server initialized`);
     });

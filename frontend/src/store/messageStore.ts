@@ -54,7 +54,7 @@ export const useMessageStore = create<MessageState>()(
       set((state) => {
         const conversationId =
           message.conversation_id ||
-          `${Math.min(message.sender_id, message.recipient_id)}-${Math.max(message.sender_id, message.recipient_id)}`;
+          `${Math.min(message.sender_id, message.receiver_id)}-${Math.max(message.sender_id, message.receiver_id)}`;
 
         if (!state.conversations[conversationId]) {
           state.conversations[conversationId] = [];
@@ -68,8 +68,7 @@ export const useMessageStore = create<MessageState>()(
           state.conversations[conversationId].push(message);
           state.conversations[conversationId].sort(
             (a, b) =>
-              new Date(a.created_at).getTime() -
-              new Date(b.created_at).getTime()
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
           );
         }
       }),
@@ -113,15 +112,10 @@ export const useMessageStore = create<MessageState>()(
       set((state) => {
         if (state.conversations[conversationId]) {
           state.conversations[conversationId].forEach((message) => {
-            if (!message.read_at) {
-              message.read_at = new Date().toISOString();
+            if (!message.read_status) {
+              message.read_status = true;
             }
           });
-        }
-
-        if (state.unreadCounts[conversationId]) {
-          state.totalUnreadCount -= state.unreadCounts[conversationId];
-          state.unreadCounts[conversationId] = 0;
         }
       }),
 
@@ -147,7 +141,7 @@ export const useMessageStore = create<MessageState>()(
         response.forEach((conversation: any) => {
           const conversationId =
             conversation.conversation_id ||
-            `${Math.min(conversation.sender_id, conversation.recipient_id)}-${Math.max(conversation.sender_id, conversation.recipient_id)}`;
+            `${Math.min(conversation.sender_id, conversation.receiver_id)}-${Math.max(conversation.sender_id, conversation.receiver_id)}`;
 
           if (!conversations[conversationId]) {
             conversations[conversationId] = [];
@@ -217,12 +211,11 @@ export const useMessageStore = create<MessageState>()(
       const optimisticMessage: Message = {
         id: tempId,
         sender_id: 0, // Will be filled by server
-        recipient_id: recipientId,
-        content,
-        produce_id: produceId,
-        read_at: null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        receiver_id: recipientId,
+        message_text: content,
+        listing_id: produceId,
+        read_status: false,
+        timestamp: new Date().toISOString(),
         conversation_id: conversationId,
       };
 
@@ -236,15 +229,18 @@ export const useMessageStore = create<MessageState>()(
       });
 
       try {
-        const messageData: any = { recipient_id: recipientId, content };
+        const messageData: any = {
+          receiver_id: recipientId,
+          content: content,
+        };
         if (produceId) {
-          messageData.produce_id = produceId;
+          messageData.listing_id = produceId;
         }
 
         const sentMessage = await apiService.sendMessage(messageData);
         const realConversationId =
           sentMessage.conversation_id ||
-          `${Math.min(sentMessage.sender_id, sentMessage.recipient_id)}-${Math.max(sentMessage.sender_id, sentMessage.recipient_id)}`;
+          `${Math.min(sentMessage.sender_id, sentMessage.receiver_id)}-${Math.max(sentMessage.sender_id, sentMessage.receiver_id)}`;
 
         set((state) => {
           // Remove optimistic message
@@ -262,8 +258,8 @@ export const useMessageStore = create<MessageState>()(
             state.conversations[realConversationId].push(sentMessage);
             state.conversations[realConversationId].sort(
               (a, b) =>
-                new Date(a.created_at).getTime() -
-                new Date(b.created_at).getTime()
+                new Date(a.timestamp).getTime() -
+                new Date(b.timestamp).getTime()
             );
           }
 
@@ -289,8 +285,8 @@ export const useMessageStore = create<MessageState>()(
       set((state) => {
         Object.values(state.conversations).forEach((messages) => {
           const message = messages.find((m) => m.id === messageId);
-          if (message && !message.read_at) {
-            message.read_at = new Date().toISOString();
+          if (message && !message.read_status) {
+            message.read_status = true;
           }
         });
       });
@@ -305,7 +301,7 @@ export const useMessageStore = create<MessageState>()(
           Object.values(state.conversations).forEach((messages) => {
             const message = messages.find((m) => m.id === messageId);
             if (message) {
-              message.read_at = null;
+              message.read_status = false;
             }
           });
           state.error =

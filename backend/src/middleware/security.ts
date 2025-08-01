@@ -10,8 +10,14 @@ export const securityHeaders = helmet({
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:", "http://localhost:3000", "http://localhost:3001"],
-      connectSrc: ["'self'", "http://localhost:3000", "ws://localhost:3000"],
+      imgSrc: [
+        "'self'",
+        'data:',
+        'https:',
+        'http://localhost:3001',
+        'http://localhost:3000',
+      ],
+      connectSrc: ["'self'", 'http://localhost:3001', 'ws://localhost:3001'],
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
@@ -19,7 +25,7 @@ export const securityHeaders = helmet({
     },
   },
   crossOriginEmbedderPolicy: false,
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
 });
 
 // General API rate limiting
@@ -28,7 +34,7 @@ export const generalLimiter = rateLimit({
   max: 1000, // Limit each IP to 1000 requests per windowMs
   message: {
     error: 'Too many requests from this IP, please try again later.',
-    retryAfter: '15 minutes'
+    retryAfter: '15 minutes',
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -40,7 +46,7 @@ export const authLimiter = rateLimit({
   max: 5, // Limit each IP to 5 requests per windowMs
   message: {
     error: 'Too many authentication attempts, please try again later.',
-    retryAfter: '15 minutes'
+    retryAfter: '15 minutes',
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -53,7 +59,7 @@ export const uploadLimiter = rateLimit({
   max: 20, // Limit each IP to 20 file uploads per hour
   message: {
     error: 'Too many file uploads, please try again later.',
-    retryAfter: '1 hour'
+    retryAfter: '1 hour',
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -65,7 +71,7 @@ export const messageLimiter = rateLimit({
   max: 100, // Limit each IP to 100 messages per hour
   message: {
     error: 'Too many messages sent, please try again later.',
-    retryAfter: '1 hour'
+    retryAfter: '1 hour',
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -77,7 +83,7 @@ export const listingLimiter = rateLimit({
   max: 50, // Limit each IP to 50 listing operations per hour
   message: {
     error: 'Too many listing operations, please try again later.',
-    retryAfter: '1 hour'
+    retryAfter: '1 hour',
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -91,5 +97,5 @@ export const corsOptions: CorsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
   exposedHeaders: ['x-csrf-token'],
-  preflightContinue: false
+  preflightContinue: false,
 };

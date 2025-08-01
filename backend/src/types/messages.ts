@@ -2,18 +2,17 @@
 export interface Message {
   id: number;
   sender_id: number;
-  recipient_id: number;
+  receiver_id: number;
   listing_id?: number;
-  content: string;
-  sent_at: Date;
-  read_at?: Date;
-  created_at: Date;
+  message_text: string;
+  timestamp: Date;
+  read_status: boolean;
 }
 
 export interface SendMessageData {
-  recipient_id: number;
+  receiver_id: number;
   listing_id?: number;
-  content: string;
+  message_text: string;
 }
 
 export interface MessageWithUsers extends Message {

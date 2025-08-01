@@ -44,7 +44,8 @@ class ApiService {
   // Helper method for making requests with improved error handling
   async request<T = any>(
     endpoint: string,
-    options: ApiRequestOptions = {}
+    options: ApiRequestOptions = {},
+    skipAuth = false
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     const config: ApiRequestOptions = {
@@ -57,7 +58,7 @@ class ApiService {
 
     // Add auth token if available
     const token = localStorage.getItem('token');
-    if (token) {
+    if (token && !skipAuth) {
       config.headers!.Authorization = `Bearer ${token}`;
     }
 
@@ -88,11 +89,48 @@ class ApiService {
 
       return data;
     } catch (error: any) {
-      // Handle authentication errors
+      // Handle authentication errors with token refresh
       if (error.status === 401) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+        try {
+          // Attempt to refresh the token
+          const refreshToken = localStorage.getItem('refreshToken');
+          if (refreshToken) {
+            const refreshResponse = await this.refreshToken();
+            localStorage.setItem('token', refreshResponse.accessToken);
+
+            // Retry the original request with the new token
+            config.headers!.Authorization = `Bearer ${refreshResponse.accessToken}`;
+            const retryResponse = await fetch(url, config);
+
+            const contentType = retryResponse.headers.get('content-type');
+            let retryData: any;
+
+            if (contentType && contentType.includes('application/json')) {
+              retryData = await retryResponse.json();
+            } else {
+              retryData = await retryResponse.text();
+            }
+
+            if (!retryResponse.ok) {
+              const errorMessage =
+                retryData?.error ||
+                retryData?.message ||
+                `HTTP error! status: ${retryResponse.status}`;
+              const retryError = new Error(errorMessage) as any;
+              retryError.status = retryResponse.status;
+              retryError.data = retryData;
+              throw retryError;
+            }
+
+            return retryData;
+          }
+        } catch (refreshError) {
+          // Refresh failed, redirect to login
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          window.location.href = '/login';
+          throw refreshError;
+        }
       }
       throw error;
     }
@@ -143,10 +181,14 @@ class ApiService {
       throw new Error('No refresh token available');
     }
 
-    const response = await this.request<RefreshResponse>('/api/users/refresh', {
-      method: 'POST',
-      body: JSON.stringify({ refreshToken }),
-    });
+    const response = await this.request<RefreshResponse>(
+      '/api/users/refresh',
+      {
+        method: 'POST',
+        body: JSON.stringify({ refreshToken }),
+      },
+      true
+    ); // Skip auth to prevent infinite loop
 
     // Update stored tokens
     if (response.accessToken) {
@@ -220,14 +262,15 @@ class ApiService {
 
   // Messages methods
   async sendMessage(messageData: {
-    receiverId: number;
-    listingId: number;
-    message: string;
+    receiver_id: number;
+    message_text: string;
+    listing_id?: number;
   }): Promise<Message> {
-    return this.request<Message>('/api/messages', {
+    const response = await this.request('/api/messages', {
       method: 'POST',
       body: JSON.stringify(messageData),
     });
+    return response.data; // Backend returns { success: true, data: message }
   }
 
   async getMessages(): Promise<Message[]> {
@@ -242,6 +285,33 @@ class ApiService {
 
   async getUnreadCount(): Promise<{ count: number }> {
     return this.request<{ count: number }>('/api/messages/unread-count');
+  }
+
+  // Get current user info
+  async getCurrentUser(): Promise<User> {
+    return this.request<User>('/api/users/me');
+  }
+
+  // Get conversations
+  async getConversations(): Promise<any> {
+    return this.request('/api/messages/conversations');
+  }
+
+  // Get specific conversation
+  async getConversation(conversationId: string): Promise<Message[]> {
+    return this.request<Message[]>(
+      `/api/messages/conversation/${conversationId}`
+    );
+  }
+
+  // Get produce listings with query params
+  async getProduceListings(queryParams: URLSearchParams): Promise<any> {
+    return this.request(`/api/produce?${queryParams.toString()}`);
+  }
+
+  // Get specific produce listing
+  async getProduceListing(id: string): Promise<ProduceListing> {
+    return this.request<ProduceListing>(`/api/produce/${id}`);
   }
 
   // Health check

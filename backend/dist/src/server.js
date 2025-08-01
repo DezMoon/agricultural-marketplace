@@ -20,20 +20,25 @@ const io = new socket_io_1.Server(server, {
     cors: {
         origin: process.env.NODE_ENV === 'production'
             ? process.env.FRONTEND_URL
-            : "http://localhost:3001",
-        methods: ["GET", "POST"],
-        credentials: true
-    }
+            : 'http://localhost:3001',
+        methods: ['GET', 'POST'],
+        credentials: true,
+    },
 });
 // Make io accessible to the app
 app_1.default.set('io', io);
 // Socket.IO connection handling
 io.on('connection', (socket) => {
     console.log('🔌 User connected:', socket.id);
-    // Handle user joining their own room for private messages
+    // Handle user joining their own room for private messages (frontend uses 'joinRoom')
+    socket.on('joinRoom', (userId) => {
+        socket.join(`user_${userId}`);
+        console.log(`👤 User ${userId} joined their room (user_${userId})`);
+    });
+    // Also handle the previous version for compatibility
     socket.on('join_user_room', (userId) => {
         socket.join(`user_${userId}`);
-        console.log(`👤 User ${userId} joined their room`);
+        console.log(`👤 User ${userId} joined their room (user_${userId})`);
     });
     // Handle disconnection
     socket.on('disconnect', () => {

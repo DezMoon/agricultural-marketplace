@@ -42,12 +42,11 @@ export type Produce = ProduceListing;
 export interface Message {
   id: number;
   sender_id: number;
-  recipient_id: number;
-  produce_id?: number;
-  content: string;
-  read_at: string | null;
-  created_at: string;
-  updated_at: string;
+  receiver_id: number;
+  listing_id?: number;
+  message_text: string;
+  timestamp: string;
+  read_status: boolean;
   conversation_id?: string;
 }
 

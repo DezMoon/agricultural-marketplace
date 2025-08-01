@@ -1,5 +1,5 @@
-// frontend/src/components/CreateListingForm.tsx
-import React, { useState, FormEvent, ChangeEvent } from 'react';
+import React from 'react';
+import { useState, FormEvent, ChangeEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore'; // To get the token for authenticated requests
 import '../styles/Forms.css'; // Reuse existing form styles
@@ -46,7 +46,7 @@ const CreateListingForm: React.FC = () => {
 
     try {
       const res = await fetch(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:3000'}/api/produce/listings`,
+        `${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/api/produce/listings`,
         {
           method: 'POST',
           headers: {

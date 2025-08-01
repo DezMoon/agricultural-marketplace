@@ -10,6 +10,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import io, { Socket } from 'socket.io-client';
 import { useAuthStore } from '../store/authStore';
 import { Message } from '../types';
+import apiService from '../services/api';
 import '../styles/MessageCenter.css';
 
 const socket: Socket = io('http://localhost:3000'); // Connect to your backend Socket.IO server
@@ -61,7 +62,8 @@ const MessageCenter: React.FC = () => {
         );
 
         if (response.ok) {
-          const data: Message[] = await response.json();
+          const responseData = await response.json();
+          const data: Message[] = responseData.data; // Backend returns data in 'data' field
           setMessages(data);
         } else if (response.status === 401 || response.status === 403) {
           setError('Unauthorized. Please log in again.');
@@ -83,11 +85,11 @@ const MessageCenter: React.FC = () => {
       console.log('New message received:', newMessage);
       // Only add message if it's part of this conversation
       if (
-        newMessage.produce_id === parseInt(listingId || '0') &&
+        newMessage.listing_id === parseInt(listingId || '0') &&
         ((newMessage.sender_id === user.id &&
-          newMessage.recipient_id === parseInt(otherUserId || '0')) ||
+          newMessage.receiver_id === parseInt(otherUserId || '0')) ||
           (newMessage.sender_id === parseInt(otherUserId || '0') &&
-            newMessage.recipient_id === user.id))
+            newMessage.receiver_id === user.id))
       ) {
         setMessages((prevMessages) => [...prevMessages, newMessage]);
       }
@@ -111,31 +113,19 @@ const MessageCenter: React.FC = () => {
     if (!newMessageText.trim() || !user) return;
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/messages/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          recipient_id: parseInt(otherUserId || '0'),
-          produce_id: parseInt(listingId || '0'),
-          content: newMessageText,
-        }),
+      const sentMessage = await apiService.sendMessage({
+        receiver_id: parseInt(otherUserId || '0'),
+        listing_id: parseInt(listingId || '0'),
+        message_text: newMessageText,
       });
 
-      if (response.ok) {
-        const sentMessage: Message = await response.json();
-        // Add the sent message to the local state (for immediate UI update)
-        setMessages((prevMessages) => [...prevMessages, sentMessage]);
-        setNewMessageText(''); // Clear the input field
-      } else {
-        setError('Failed to send message.');
-      }
-    } catch (err) {
+      // Add the sent message to the local state (for immediate UI update)
+      setMessages((prevMessages) => [...prevMessages, sentMessage]);
+      setNewMessageText(''); // Clear the input field
+      setError(''); // Clear any previous errors
+    } catch (err: any) {
       console.error('Error sending message:', err);
-      setError('An error occurred while sending the message.');
+      setError(err.message || 'Failed to send message.');
     }
   };
 
@@ -179,9 +169,9 @@ const MessageCenter: React.FC = () => {
               }`}
             >
               <div className="message-content">
-                <p>{message.content}</p>
+                <p>{message.message_text}</p>
                 <span className="message-timestamp">
-                  {new Date(message.created_at).toLocaleString()}
+                  {new Date(message.timestamp).toLocaleString()}
                 </span>
               </div>
             </div>

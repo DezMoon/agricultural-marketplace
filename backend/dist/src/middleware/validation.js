@@ -6,13 +6,13 @@ const express_validator_1 = require("express-validator");
 const handleValidationErrors = (req, res, next) => {
     const errors = (0, express_validator_1.validationResult)(req);
     if (!errors.isEmpty()) {
-        const validationErrors = errors.array().map(error => ({
+        const validationErrors = errors.array().map((error) => ({
             field: error.type === 'field' ? error.path : 'unknown',
-            message: error.msg
+            message: error.msg,
         }));
         res.status(400).json({
             error: 'Validation failed',
-            details: validationErrors
+            details: validationErrors,
         });
         return;
     }
@@ -36,36 +36,32 @@ exports.userValidation = {
             .withMessage('Password must be at least 8 characters long')
             .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
             .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
-        exports.handleValidationErrors
+        exports.handleValidationErrors,
     ],
     login: [
         (0, express_validator_1.body)('identifier')
             .notEmpty()
             .withMessage('Email or username is required')
             .trim(),
-        (0, express_validator_1.body)('password')
-            .notEmpty()
-            .withMessage('Password is required'),
-        exports.handleValidationErrors
+        (0, express_validator_1.body)('password').notEmpty().withMessage('Password is required'),
+        exports.handleValidationErrors,
     ],
     forgotPassword: [
         (0, express_validator_1.body)('email')
             .isEmail()
             .withMessage('Please provide a valid email address')
             .normalizeEmail(),
-        exports.handleValidationErrors
+        exports.handleValidationErrors,
     ],
     resetPassword: [
-        (0, express_validator_1.body)('token')
-            .notEmpty()
-            .withMessage('Reset token is required'),
+        (0, express_validator_1.body)('token').notEmpty().withMessage('Reset token is required'),
         (0, express_validator_1.body)('password')
             .isLength({ min: 8 })
             .withMessage('Password must be at least 8 characters long')
             .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/)
             .withMessage('Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character'),
-        exports.handleValidationErrors
-    ]
+        exports.handleValidationErrors,
+    ],
 };
 // Produce validation rules
 exports.produceValidation = {
@@ -98,7 +94,7 @@ exports.produceValidation = {
             .isISO8601()
             .withMessage('Harvest date must be a valid date')
             .toDate(),
-        exports.handleValidationErrors
+        exports.handleValidationErrors,
     ],
     update: [
         (0, express_validator_1.body)('title')
@@ -141,16 +137,16 @@ exports.produceValidation = {
             .optional()
             .isIn(['active', 'sold', 'expired'])
             .withMessage('Status must be one of: active, sold, expired'),
-        exports.handleValidationErrors
-    ]
+        exports.handleValidationErrors,
+    ],
 };
 // Message validation rules
 exports.messageValidation = {
     send: [
-        (0, express_validator_1.body)('recipient_id')
+        (0, express_validator_1.body)('receiver_id')
             .isInt({ min: 1 })
-            .withMessage('Recipient ID must be a positive integer'),
-        (0, express_validator_1.body)('content')
+            .withMessage('Receiver ID must be a positive integer'),
+        (0, express_validator_1.body)('message_text')
             .isLength({ min: 1, max: 1000 })
             .withMessage('Message content must be between 1 and 1000 characters')
             .trim(),
@@ -158,8 +154,8 @@ exports.messageValidation = {
             .optional()
             .isInt({ min: 1 })
             .withMessage('Listing ID must be a positive integer'),
-        exports.handleValidationErrors
-    ]
+        exports.handleValidationErrors,
+    ],
 };
 // Query validation rules
 exports.queryValidation = {
@@ -174,7 +170,7 @@ exports.queryValidation = {
             .isInt({ min: 1, max: 100 })
             .withMessage('Limit must be between 1 and 100')
             .toInt(),
-        exports.handleValidationErrors
+        exports.handleValidationErrors,
     ],
     produceSearch: [
         (0, express_validator_1.query)('category')
@@ -201,7 +197,7 @@ exports.queryValidation = {
             .isLength({ min: 1, max: 100 })
             .withMessage('Search term must be between 1 and 100 characters')
             .trim(),
-        exports.handleValidationErrors
-    ]
+        exports.handleValidationErrors,
+    ],
 };
 //# sourceMappingURL=validation.js.map

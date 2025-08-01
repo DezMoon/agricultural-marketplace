@@ -5,13 +5,12 @@ import { useAuthStore } from '../store/authStore';
 import '../styles/Inbox.css';
 
 interface Conversation {
-  produce_id: number;
+  listing_id: number;
   other_user_id: number;
-  other_username?: string;
-  other_email?: string;
-  title: string;
-  message_text: string;
-  timestamp: string;
+  other_user_username?: string;
+  title?: string;
+  latest_message: string;
+  latest_message_date: string;
   sender_id: number;
   unread_count: number;
 }
@@ -44,8 +43,8 @@ const Inbox: React.FC = () => {
         );
 
         if (response.ok) {
-          const data: Conversation[] = await response.json();
-          setConversations(data);
+          const result = await response.json();
+          setConversations(result.data || []); // Handle the API response structure
         } else if (response.status === 401 || response.status === 403) {
           setError('Unauthorized. Please log in again.');
           // Optional: navigate('/login') or logout()
@@ -94,22 +93,22 @@ const Inbox: React.FC = () => {
         <ul className="conversation-list">
           {conversations.map((conv) => (
             <li
-              key={`${conv.produce_id}-${conv.other_user_id}`} // Unique key for conversation
+              key={`${conv.listing_id}-${conv.other_user_id}`} // Unique key for conversation
               className="conversation-item"
               onClick={() =>
                 handleConversationClick(
-                  conv.produce_id,
+                  conv.listing_id,
                   conv.other_user_id,
-                  conv.other_username || conv.other_email || 'Unknown',
-                  conv.title
+                  conv.other_user_username || 'Unknown',
+                  conv.title || 'Unknown Item'
                 )
               }
             >
               <div className="conversation-info">
                 <div className="conversation-header">
-                  <h3>Conversation about: {conv.title}</h3>
+                  <h3>Conversation about: {conv.title || 'Unknown Item'}</h3>
                   <span className="other-party">
-                    With: {conv.other_username || conv.other_email}
+                    With: {conv.other_user_username || 'Unknown User'}
                   </span>
                   {conv.unread_count > 0 && (
                     <span className="unread-count">
@@ -120,13 +119,13 @@ const Inbox: React.FC = () => {
                 <p className="last-message">
                   {conv.sender_id === user?.id
                     ? 'You: '
-                    : `${conv.other_username || conv.other_email}: `}
-                  {conv.message_text.length > 50
-                    ? conv.message_text.substring(0, 50) + '...'
-                    : conv.message_text}
+                    : `${conv.other_user_username || 'Unknown User'}: `}
+                  {conv.latest_message.length > 50
+                    ? conv.latest_message.substring(0, 50) + '...'
+                    : conv.latest_message}
                 </p>
                 <span className="message-timestamp">
-                  {new Date(conv.timestamp).toLocaleString()}
+                  {new Date(conv.latest_message_date).toLocaleString()}
                 </span>
               </div>
             </li>
