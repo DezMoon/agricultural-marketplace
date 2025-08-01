@@ -146,7 +146,7 @@ export const useAuthStore = create<AuthState>()(
           await apiService.logout();
         } catch (error) {
           // Continue with logout even if API call fails
-          console.warn('Logout API call failed:', error);
+          //console.warn('Logout API call failed:', error);
         } finally {
           // Clear tokens and state
           localStorage.removeItem('token');
@@ -194,7 +194,7 @@ export const useAuthStore = create<AuthState>()(
             set({ unreadCount: unreadResponse.unreadCount || 0 });
           } catch (error) {
             // Non-critical error, just log it
-            console.warn('Could not fetch unread count:', error);
+            //console.warn('Could not fetch unread count:', error);
             set({ unreadCount: 0 });
           }
         } catch (error) {
@@ -221,16 +221,12 @@ export const useAuthStore = create<AuthState>()(
                 );
                 set({ unreadCount: unreadResponse.unreadCount || 0 });
               } catch (error) {
-                console.warn(
-                  'Could not fetch unread count after refresh:',
-                  error
-                );
                 set({ unreadCount: 0 });
               }
               return;
             }
           } catch (refreshError) {
-            console.warn('Token refresh failed:', refreshError);
+            //console.warn('Token refresh failed:', refreshError);
           }
 
           // Both original and refresh failed, clear auth
